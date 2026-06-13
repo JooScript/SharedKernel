@@ -1,0 +1,400 @@
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using SharedKernel.Da.Exceptions;
+using SharedKernel.Domains.Contracts.Generic;
+using static SharedKernel.Core.Enums.Status.Status;
+
+namespace SharedKernel.Da.Repos;
+
+public class TableCmdRepo<Tb>( DbContext context, ILogger<TableCmdRepo<Tb>> logger, ITableQryRepo<Tb> repoQuery)
+    : ITableCmdRepo<Tb> where Tb : SharedKernelBaseTable
+{
+    protected readonly DbSet<Tb> dbSet = (context ?? throw new ArgumentNullException(nameof(context))).Set<Tb>();
+
+    public async Task<(bool success, Guid newId)> AddAsync(Tb entity, CancellationToken cancellationToken = default)
+    {
+        const string methodName = nameof(AddAsync);
+
+        if (entity == null)
+        {
+            logger.LogWarning($"Entity cannot be null in {methodName}");
+            throw new ArgumentNullException(nameof(entity));
+        }
+
+        try
+        {
+            entity.Id = Guid.Empty;
+            entity.CreatedAt = DateTime.UtcNow;
+            await dbSet.AddAsync(entity, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
+            return (true, entity.Id);
+        }
+        catch (Exception ex)
+        {
+            throw new DataAccessException(ex, $"Failed to add entity of type {typeof(Tb).Name}");
+        }
+    }
+
+    public async Task<(bool success, IEnumerable<Guid> newIds)> AddAsync(IEnumerable<Tb> entities, CancellationToken cancellationToken = default)
+    {
+        const string methodName = nameof(AddAsync);
+
+        if (entities == null)
+        {
+            logger.LogWarning($"Entities collection cannot be null in {methodName}");
+            throw new ArgumentNullException(nameof(entities));
+        }
+
+        if (!entities.Any())
+        {
+            return (true, Enumerable.Empty<Guid>());
+        }
+
+        try
+        {
+            var utcNow = DateTime.UtcNow;
+            var entityList = entities.ToList();
+
+            foreach (var entity in entityList)
+            {
+                entity.Id = Guid.Empty;
+                entity.CreatedAt = utcNow;
+            }
+
+            await dbSet.AddRangeAsync(entityList, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
+
+            return (true, entityList.Select(e => e.Id));
+        }
+        catch (Exception ex)
+        {
+            throw new DataAccessException(ex, $"Failed to add entities of type {typeof(Tb).Name}");
+        }
+    }
+
+    public async Task<bool> UpdateAsync(Tb entity, CancellationToken cancellationToken = default)
+    {
+        const string methodName = nameof(UpdateAsync);
+        string _loggerMsg = $"Warning in {methodName} In Table Cmd Repo of {typeof(Tb)}";
+
+        if (entity == null)
+        {
+            logger.LogWarning(_loggerMsg, "Entity cannot be null");
+            throw new ArgumentNullException(nameof(entity));
+        }
+
+        try
+        {
+            var dbData = dbSet.Local.FirstOrDefault(e => e.Id == entity.Id);
+
+            if (dbData is null)
+            {
+                dbData = await dbSet.FirstOrDefaultAsync(x => x.Id == entity.Id, cancellationToken);
+
+                if (dbData is null)
+                {
+                    logger.LogWarning($"There is no {typeof(Tb)} entity exist with id {entity.Id}");
+                    return false;
+                }
+            }
+
+            entity.UpdatedAt = DateTime.UtcNow;
+
+            var entry = context.Entry(dbData);
+
+            entry.CurrentValues.SetValues(entity);
+            entry.Property(x => x.CreatedAt).IsModified = false;
+            entry.Property(x => x.CreatedBy).IsModified = false;
+
+            await context.SaveChangesAsync(cancellationToken);
+
+            return true;
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            throw new DataAccessException(ex, $"Concurrency conflict updating entity {entity.Id}", isConcurrencyConflict: true);
+        }
+        catch (Exception ex)
+        {
+            throw new DataAccessException(ex, $"Failed to update entity {entity.Id} of type {typeof(Tb).Name}");
+        }
+    }
+
+    public async Task<bool> UpdateAsync(IEnumerable<Tb> entities, CancellationToken cancellationToken = default)
+    {
+        const string methodName = nameof(UpdateAsync);
+
+        if (entities == null)
+        {
+            logger.LogError($"Error in {methodName}: Entities collection cannot be null");
+            throw new ArgumentNullException(nameof(entities));
+        }
+
+        var entityList = entities.ToList();
+        if (!entityList.Any())
+            return true;
+
+        var ids = entityList.Select(e => e.Id).ToList();
+        var utcNow = DateTime.UtcNow;
+
+        try
+        {
+            var trackedEntities = context.Set<Tb>()
+                .Local
+                .Where(e => ids.Contains(e.Id))
+                .ToDictionary(e => e.Id);
+
+            var idsToFetch = ids.Except(trackedEntities.Keys).ToList();
+
+            if (idsToFetch.Any())
+            {
+                var dbEntities = await repoQuery.FindAsync(idsToFetch, cancellationToken);
+
+                foreach (var dbEntity in dbEntities)
+                {
+                    trackedEntities[dbEntity.Id] = dbEntity;
+                }
+            }
+
+            foreach (var entity in entityList)
+            {
+                if (!trackedEntities.TryGetValue(entity.Id, out var dbData))
+                {
+                    logger.LogError($"Error In {methodName}: Failed to update");
+                    return false;
+                }
+
+                entity.UpdatedAt = utcNow;
+
+                var entry = context.Entry(dbData);
+                entry.CurrentValues.SetValues(entity);
+                entry.Property(x => x.CreatedAt).IsModified = false;
+                entry.Property(x => x.CreatedBy).IsModified = false;
+            }
+
+            await context.SaveChangesAsync(cancellationToken);
+            return true;
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            throw new DataAccessException(ex, "Concurrency conflict updating entities", isConcurrencyConflict: true);
+        }
+        catch (Exception ex)
+        {
+            throw new DataAccessException(ex, $"Failed to update entities of type {typeof(Tb).Name}");
+        }
+    }
+
+    public async Task<bool> ChangeStatusAsync(Guid id, Guid userId, enCurrentState status = enCurrentState.Active, CancellationToken cancellationToken = default)
+    {
+
+        try
+        {
+            var entity = await repoQuery.FindAsync(id, cancellationToken);
+
+            if (entity == null)
+                return false;
+
+            entity.CurrentState = status;
+            entity.UpdatedBy = userId;
+            entity.UpdatedAt = DateTime.UtcNow;
+
+            context.Entry(entity).State = EntityState.Modified;
+            await context.SaveChangesAsync(cancellationToken);
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            throw new DataAccessException(ex, $"Failed to change status for entity {id} of type {typeof(Tb).Name}");
+        }
+    }
+
+    public async Task<bool> ChangeStatusAsync(IEnumerable<Guid> ids, Guid userId, enCurrentState status = enCurrentState.Active, CancellationToken cancellationToken = default)
+    {
+        const string methodName = nameof(ChangeStatusAsync);
+
+        if (ids == null)
+        {
+            logger.LogWarning($"Ids collection cannot be null in {methodName}");
+            throw new ArgumentNullException(nameof(ids));
+        }
+
+        if (!ids.Any())
+        {
+            return true; // Consider empty collection as successful
+        }
+
+        try
+        {
+            var distinctIds = ids.Distinct().ToList();
+            var entities = await dbSet
+                .Where(e => distinctIds.Contains(e.Id))
+                .ToListAsync(cancellationToken);
+
+            // Check if all entities were found
+            if (entities.Count != distinctIds.Count)
+            {
+                var foundIds = entities.Select(e => e.Id).ToList();
+                var missingIds = distinctIds.Except(foundIds).ToList();
+
+                logger.LogWarning($"Some entities not found: {string.Join(", ", missingIds)} in {methodName}");
+                return false;
+            }
+
+            var utcNow = DateTime.UtcNow;
+            foreach (var entity in entities)
+            {
+                entity.CurrentState = status;
+                entity.UpdatedBy = userId;
+                entity.UpdatedAt = utcNow;
+                context.Entry(entity).State = EntityState.Modified;
+            }
+
+            await context.SaveChangesAsync(cancellationToken);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            throw new DataAccessException(ex,
+                $"Failed to change status for multiple entities of type {typeof(Tb).Name}");
+        }
+    }
+
+    public async Task<bool> HardDeleteAsync(Guid id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var entity = await repoQuery.FindAsync(id, cancellationToken);
+
+            if (entity == null)
+                return false;
+
+            context.Entry(entity).State = EntityState.Deleted;
+            await context.SaveChangesAsync(cancellationToken);
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            throw new DataAccessException(ex, $"Failed to hard delete entity {id} of type {typeof(Tb).Name}");
+        }
+    }
+
+    public async Task<bool> HardDeleteAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken)
+    {
+        const string methodName = nameof(ChangeStatusAsync);
+
+        if (ids == null)
+        {
+            logger.LogWarning($"Ids collection cannot be null in {methodName}");
+            throw new ArgumentNullException(nameof(ids));
+        }
+
+        if (!ids.Any())
+        {
+            return true;
+        }
+
+        try
+        {
+            var distinctIds = ids.Distinct().ToList();
+            var entities = await dbSet
+                .Where(e => distinctIds.Contains(e.Id))
+                .ToListAsync(cancellationToken);
+
+            // Check if all entities were found
+            if (entities.Count != distinctIds.Count)
+            {
+                var foundIds = entities.Select(e => e.Id).ToList();
+                var missingIds = distinctIds.Except(foundIds).ToList();
+
+                logger.LogWarning($"Some entities not found: {string.Join(", ", missingIds)} in {methodName}");
+                return false;
+            }
+
+            foreach (var entity in entities)
+            {
+                context.Entry(entity).State = EntityState.Deleted;
+            }
+
+            await context.SaveChangesAsync(cancellationToken);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            throw new DataAccessException(ex,
+                $"Failed to hard delete for multiple entities of type {typeof(Tb).Name}");
+        }
+    }
+
+    public async Task<bool> HardDeleteAsync(Tb entity, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (entity == null)
+            {
+                return false;
+            }
+
+            context.Entry(entity).State = EntityState.Deleted;
+            await context.SaveChangesAsync(cancellationToken);
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            throw new DataAccessException(ex, $"Failed to hard delete entity {entity.Id} of type {typeof(Tb).Name}");
+        }
+    }
+
+    public async Task<bool> HardDeleteAsync(IEnumerable<Tb> entities, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (entities == null)
+            {
+                return false;
+            }
+
+            foreach (var entity in entities)
+            {
+                context.Entry(entity).State = EntityState.Deleted;
+            }
+
+            await context.SaveChangesAsync(cancellationToken);
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            foreach (var entity in entities)
+            {
+                throw new DataAccessException(ex, $"Failed to hard delete entity {entity.Id} of type {typeof(Tb).Name}");
+            }
+
+            return false;
+        }
+    }
+
+    public async Task<bool> SoftDeleteAsync(Guid id, Guid userId, CancellationToken cancellationToken)
+    {
+        return await ChangeStatusAsync(id, userId, (int)enCurrentState.Deleted, cancellationToken);
+    }
+
+    public async Task<bool> SoftDeleteAsync(IEnumerable<Guid> ids, Guid userId, CancellationToken cancellationToken)
+    {
+        return await ChangeStatusAsync(ids, userId, (int)enCurrentState.Deleted, cancellationToken);
+    }
+
+    public async Task<bool> SoftDeleteAsync(Tb entity, Guid userId, CancellationToken cancellationToken)
+    {
+        return await ChangeStatusAsync(entity.Id, userId, (int)enCurrentState.Deleted, cancellationToken);
+    }
+
+    public async Task<bool> SoftDeleteAsync(IEnumerable<Tb> entities, Guid userId, CancellationToken cancellationToken)
+    {
+        return await ChangeStatusAsync(entities.Select(e => e.Id), userId, (int)enCurrentState.Deleted, cancellationToken);
+    }
+
+}
