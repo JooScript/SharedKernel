@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="FluentValidation" Version="12.1.1" />
+		<PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.9" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Core\SharedKernel.Core.csproj" />
+		<ProjectReference Include="..\Da\SharedKernel.Da.csproj" />
+		<ProjectReference Include="..\Domains\SharedKernel.Domains.csproj" />
+	</ItemGroup>
+
+</Project>
