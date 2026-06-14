@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using SharedKernel.Api.Models;
 using SharedKernel.Bl.Constants;
 using SharedKernel.Bl.Contracts.Auth;
@@ -23,12 +24,13 @@ namespace SharedKernel.Api.Controllers.Auth;
 [Route("api/v1/auth")]
 [ApiController]
 [Authorize(Roles = SystemRoles.Admin)]
-public class AuthController(
+public class AuthController<TDbContext>(
     IToken tokenService,
     IUserQry userQryService,
     IUserCmd userCmdService,
-    IRefreshTokens refreshTokenService)
+    IRefreshTokens<TDbContext> refreshTokenService)
     : ControllerBase
+    where TDbContext : DbContext
 {
     private string RefreshTokenCookieName => "RefreshToken";
 

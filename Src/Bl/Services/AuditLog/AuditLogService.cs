@@ -1,4 +1,5 @@
-﻿using SharedKernel.Bl.Contracts.AuditLog;
+﻿using Microsoft.EntityFrameworkCore;
+using SharedKernel.Bl.Contracts.AuditLog;
 using SharedKernel.Bl.Contracts.Auth;
 using SharedKernel.Bl.Contracts.Events;
 using SharedKernel.Bl.Dtos.AuditLog;
@@ -8,13 +9,14 @@ using SharedKernel.Domains.Models.Logging;
 
 namespace SharedKernel.Bl.Services.AuditLog;
 
-public class AuditLogService(
-    ITableQryRepo<TbAuditLog> repoQuery,
-    ITableCmdRepo<TbAuditLog> repoCommand,
+public class AuditLogService<TDbContext>(
+    ITableQryRepo<TbAuditLog, TDbContext> repoQuery,
+    ITableCmdRepo<TbAuditLog, TDbContext> repoCommand,
     IUserQry userServiceQuery,
     ICrudPublisher publisher)
-    : BaseService<TbAuditLog, AuditLogDto>(repoQuery, repoCommand, userServiceQuery, publisher),
-    IAuditLog
+    : BaseService<TbAuditLog, AuditLogDto, TDbContext>(repoQuery, repoCommand, userServiceQuery, publisher),
+    IAuditLog<TDbContext>
+    where TDbContext : DbContext
 {
     public override AuditLogDto ToDto(TbAuditLog entity)
     {

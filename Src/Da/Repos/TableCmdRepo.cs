@@ -6,8 +6,10 @@ using static SharedKernel.Core.Enums.Status.Status;
 
 namespace SharedKernel.Da.Repos;
 
-public class TableCmdRepo<Tb>( DbContext context, ILogger<TableCmdRepo<Tb>> logger, ITableQryRepo<Tb> repoQuery)
-    : ITableCmdRepo<Tb> where Tb : SharedKernelBaseTable
+public class TableCmdRepo<Tb, TDbContext>(TDbContext context, ILogger<TableCmdRepo<Tb, TDbContext>> logger, ITableQryRepo<Tb, TDbContext> repoQuery)
+    : ITableCmdRepo<Tb, TDbContext>
+    where Tb : SharedKernelBaseTable
+    where TDbContext : DbContext
 {
     protected readonly DbSet<Tb> dbSet = (context ?? throw new ArgumentNullException(nameof(context))).Set<Tb>();
 

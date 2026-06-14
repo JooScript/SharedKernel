@@ -6,7 +6,9 @@ using SharedKernel.Core.Exceptions;
 
 namespace SharedKernel.Da.Repos;
 
-public class ViewRepo<Vw>(DbContext context) : IViewRepo<Vw> where Vw : class
+public class ViewRepo<Vw, TDbContext>(TDbContext context) : IViewRepo<Vw>
+    where Vw : class
+    where TDbContext : DbContext
 {
     protected readonly DbSet<Vw> dbSet = (context ?? throw new ArgumentNullException(nameof(context))).Set<Vw>();
 

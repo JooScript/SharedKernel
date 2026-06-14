@@ -1,4 +1,5 @@
-﻿using SharedKernel.Bl.Contracts.Auth;
+﻿using Microsoft.EntityFrameworkCore;
+using SharedKernel.Bl.Contracts.Auth;
 using SharedKernel.Bl.Contracts.Events;
 using SharedKernel.Bl.Dtos.User;
 using SharedKernel.Bl.Services.Base;
@@ -8,16 +9,17 @@ using static SharedKernel.Core.Enums.Status.Status;
 
 namespace SharedKernel.Bl.Services.Auth;
 
-public class RefreshTokenService
-    : BaseService<TbRefreshToken, RefreshTokenDto>,
-    IRefreshTokens
+public class RefreshTokenService<TDbContext>
+    : BaseService<TbRefreshToken, RefreshTokenDto, TDbContext>,
+    IRefreshTokens<TDbContext>
+     where TDbContext : DbContext
 {
-    ITableCmdRepo<TbRefreshToken> repoCmd;
-    ITableQryRepo<TbRefreshToken> repoQry;
+    ITableCmdRepo<TbRefreshToken, TDbContext> repoCmd;
+    ITableQryRepo<TbRefreshToken, TDbContext> repoQry;
 
     public RefreshTokenService(
-    ITableQryRepo<TbRefreshToken> repoQry,
-    ITableCmdRepo<TbRefreshToken> repoCmd,
+    ITableQryRepo<TbRefreshToken, TDbContext> repoQry,
+    ITableCmdRepo<TbRefreshToken, TDbContext> repoCmd,
     IUserQry userServiceQuery,
     ICrudPublisher publisher)
     : base(repoQry, repoCmd, userServiceQuery, publisher)

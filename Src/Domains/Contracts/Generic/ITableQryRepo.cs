@@ -1,9 +1,12 @@
-﻿using SharedKernel.Domains.Contracts.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using SharedKernel.Domains.Contracts.Models;
 using System.Linq.Expressions;
 
 namespace SharedKernel.Domains.Contracts.Generic;
 
-public interface ITableQryRepo<Tb> where Tb : SharedKernelBaseTable
+public interface ITableQryRepo<Tb, TDbContext>
+    where Tb : SharedKernelBaseTable
+    where TDbContext : DbContext
 {
     Task<List<Tb>> GetAllAsync(CancellationToken cancellationToken = default);
 

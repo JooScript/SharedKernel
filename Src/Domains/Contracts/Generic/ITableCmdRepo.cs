@@ -1,8 +1,11 @@
-﻿using static SharedKernel.Core.Enums.Status.Status;
+﻿using Microsoft.EntityFrameworkCore;
+using static SharedKernel.Core.Enums.Status.Status;
 
 namespace SharedKernel.Domains.Contracts.Generic;
 
-public interface ITableCmdRepo<Tb> where Tb : SharedKernelBaseTable
+public interface ITableCmdRepo<Tb, TDbContext>
+    where Tb : SharedKernelBaseTable
+    where TDbContext : DbContext
 {
     Task<(bool success, Guid newId)> AddAsync(Tb entity, CancellationToken cancellationToken = default);
 

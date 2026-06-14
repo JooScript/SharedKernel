@@ -8,8 +8,12 @@ using System.Linq.Expressions;
 
 namespace SharedKernel.Da.Repos;
 
-public class TableQryRepo<Tb>(DbContext context, ILogger<TableQryRepo<Tb>> logger)
-    : ITableQryRepo<Tb> where Tb : SharedKernelBaseTable
+public class TableQryRepo<Tb, TDbContext>(
+    TDbContext context,
+    ILogger<TableQryRepo<Tb, TDbContext>> logger)
+    : ITableQryRepo<Tb, TDbContext>
+    where Tb : SharedKernelBaseTable
+    where TDbContext : DbContext
 {
     protected readonly DbSet<Tb> tbDbSet = (context ?? throw new ArgumentNullException(nameof(context))).Set<Tb>();
 

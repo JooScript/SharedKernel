@@ -1,4 +1,5 @@
-﻿using SharedKernel.Bl.Contracts.Auth;
+﻿using Microsoft.EntityFrameworkCore;
+using SharedKernel.Bl.Contracts.Auth;
 using SharedKernel.Bl.Contracts.Base;
 using SharedKernel.Bl.Contracts.Events;
 using SharedKernel.Bl.Events.Args;
@@ -11,18 +12,19 @@ using static SharedKernel.Core.Enums.Status.Status;
 
 namespace SharedKernel.Bl.Services.Base;
 
-public abstract class BaseService<Tb, Dto>
+public abstract class BaseService<Tb, Dto, TDbContext>
     : IBaseService<Tb, Dto>
     where Tb : SharedKernelBaseTable
     where Dto : class
+    where TDbContext : DbContext
 {
-    readonly ITableQryRepo<Tb> _repoQry;
-    readonly ITableCmdRepo<Tb> _repoCmd;
+    readonly ITableQryRepo<Tb, TDbContext> _repoQry;
+    readonly ITableCmdRepo<Tb, TDbContext> _repoCmd;
     readonly IUserQry _userServiceQuery;
-    readonly IUnitOfWork? _UnitOfWork;
+    readonly IUnitOfWork<TDbContext>? _UnitOfWork;
     private readonly ICrudPublisher _publisher;
 
-    public BaseService(ITableQryRepo<Tb> repoQry, ITableCmdRepo<Tb> repoCmd, IUserQry userQry, ICrudPublisher publisher)
+    public BaseService(ITableQryRepo<Tb, TDbContext> repoQry, ITableCmdRepo<Tb, TDbContext> repoCmd, IUserQry userQry, ICrudPublisher publisher)
     {
         _repoQry = repoQry;
         _repoCmd = repoCmd;
@@ -30,7 +32,7 @@ public abstract class BaseService<Tb, Dto>
         _publisher = publisher;
     }
 
-    public BaseService(IUnitOfWork unitOfWork, ITableQryRepo<Tb> repoQry, IUserQry userServiceQry, ICrudPublisher publisher)
+    public BaseService(IUnitOfWork<TDbContext> unitOfWork, ITableQryRepo<Tb, TDbContext> repoQry, IUserQry userServiceQry, ICrudPublisher publisher)
     {
         _UnitOfWork = unitOfWork;
         _repoQry = repoQry;
