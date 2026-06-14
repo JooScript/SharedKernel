@@ -1,6 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using SharedKernel.Api.Controllers.Auth;
+﻿using Microsoft.Extensions.DependencyInjection;
 using SharedKernel.Api.Middlewares;
 using SharedKernel.Api.Services;
 using SharedKernel.Bl.Contracts;
@@ -18,10 +16,8 @@ namespace SharedKernel.Api.Extentions;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddSharedKernelApi<TDbContext>(this IServiceCollection services) where TDbContext : DbContext
+    public static IServiceCollection AddSharedKernelApi(this IServiceCollection services)
     {
-        services.AddControllers().AddApplicationPart(typeof(AuthController<TDbContext>).Assembly);
-
         services.AddMemoryCache();
 
         #region Middlewares
@@ -30,28 +26,19 @@ public static class ServiceCollectionExtensions
 
         #endregion
 
-
         #region DI
 
-        services.AddScoped(typeof(IRefreshTokens<>), typeof(RefreshTokenService<>));
-
-        services.AddScoped<IToken, TokenService>();
-        services.AddScoped<IEmailing, EmailingService>();
         services.AddScoped(typeof(ITableQryRepo<,>), typeof(TableQryRepo<,>));
         services.AddScoped(typeof(ITableCmdRepo<,>), typeof(TableCmdRepo<,>));
-
-
         services.AddScoped(typeof(IUnitOfWork<>), typeof(UnitOfWork<>));
+
+        services.AddScoped(typeof(IRefreshTokens<>), typeof(RefreshTokenService<>));
+        services.AddScoped<IToken, TokenService>();
+        services.AddScoped<IEmailing, EmailingService>();
         services.AddScoped<ICrudPublisher, CrudPublisher>();
-
-
         services.AddScoped(typeof(IAuditLog<>), typeof(AuditLogService<>));
 
-
         #endregion
-
-
-
 
         return services;
     }
