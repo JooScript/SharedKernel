@@ -1,26 +1,31 @@
-﻿using SharedKernel.Bl.Contracts;
+﻿using Microsoft.Extensions.Options;
+using SharedKernel.Bl.Contracts;
+using SharedKernel.Bl.Models;
 using System.Net;
 using System.Net.Mail;
 
 namespace SharedKernel.Bl.Services.Senders;
 
-public class EmailingService( string SenderEmail, string Password, string SenderName) : IEmailing
+public class EmailingService(IOptions<EmailSettings> options) : IEmailing
 {
+
+    private readonly EmailSettings _settings = options.Value;
+
     public async Task SendAsync(string email, string subject, string message)
     {
-        string MyMail =  SenderEmail
+        string MyMail = _settings.SenderEmail
             ?? throw new ArgumentNullException("Email:Sender", "Sender key is missing in configuration.");
 
         if (string.IsNullOrWhiteSpace(MyMail))
             throw new ArgumentException("Sender Email key cannot be empty or whitespace.", nameof(MyMail));
 
-        string pw =  Password
+        string pw = _settings.Password
             ?? throw new ArgumentNullException("Email:Password", "Password is missing in configuration.");
 
         if (string.IsNullOrWhiteSpace(pw))
             throw new ArgumentException("Password cannot be empty or whitespace.", nameof(pw));
 
-        string senderName =  SenderName
+        string senderName = _settings.SenderName
             ?? throw new ArgumentNullException("Email:SenderName", "Sender Name is missing in configuration.");
 
         if (string.IsNullOrWhiteSpace(pw))
