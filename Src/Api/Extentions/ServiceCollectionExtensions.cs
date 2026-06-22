@@ -9,8 +9,8 @@ using SharedKernel.Bl.Events.Publishers;
 using SharedKernel.Bl.Services.AuditLog;
 using SharedKernel.Bl.Services.Auth;
 using SharedKernel.Bl.Services.Senders;
+using SharedKernel.Da.Contracts;
 using SharedKernel.Da.Repos;
-using SharedKernel.Domains.Contracts.Generic;
 
 namespace SharedKernel.Api.Extentions;
 
@@ -28,9 +28,9 @@ public static class ServiceCollectionExtensions
 
         #region DI
 
-        services.AddScoped(typeof(ITableQryRepo<,>), typeof(TableQryRepo<,>));
-        services.AddScoped(typeof(ITableCmdRepo<,>), typeof(TableCmdRepo<,>));
-        services.AddScoped(typeof(IUnitOfWork<>), typeof(UnitOfWork<>));
+        services.AddScoped(typeof(ISharedKernelTableQryRepo<,>), typeof(SharedKernelTableQryRepo<,>));
+        services.AddScoped(typeof(ISharedKernelTableCmdRepo<,>), typeof(SharedKernelTableCmdRepo<,>));
+        services.AddScoped(typeof(ISharedKernelUnitOfWork<>), typeof(SharedKernelUnitOfWork<>));
 
         services.AddScoped(typeof(IRefreshTokens<>), typeof(RefreshTokenService<>));
         services.AddScoped<IToken, TokenService>();

@@ -4,17 +4,17 @@ using SharedKernel.Bl.Contracts.Auth;
 using SharedKernel.Bl.Contracts.Events;
 using SharedKernel.Bl.Dtos.AuditLog;
 using SharedKernel.Bl.Services.Base;
-using SharedKernel.Domains.Contracts.Generic;
+using SharedKernel.Da.Contracts;
 using SharedKernel.Domains.Models.Logging;
 
 namespace SharedKernel.Bl.Services.AuditLog;
 
 public class AuditLogService<TDbContext>(
-    ITableQryRepo<TbAuditLog, TDbContext> repoQuery,
-    ITableCmdRepo<TbAuditLog, TDbContext> repoCommand,
+    ISharedKernelTableQryRepo<TbAuditLog, TDbContext> repoQuery,
+    ISharedKernelTableCmdRepo<TbAuditLog, TDbContext> repoCommand,
     IUserQry userServiceQuery,
     ICrudPublisher publisher)
-    : BaseService<TbAuditLog, AuditLogDto, TDbContext>(repoQuery, repoCommand, userServiceQuery, publisher),
+    : SharedKernelBaseService<TbAuditLog, AuditLogDto, TDbContext>(repoQuery, repoCommand, userServiceQuery, publisher),
     IAuditLog<TDbContext>
     where TDbContext : DbContext
 {

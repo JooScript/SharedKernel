@@ -1,8 +1,6 @@
-﻿using SharedKernel.Core.Resources;
-using System;
-using System.Collections.Generic;
+﻿using SharedKernel.Bl.Resources;
 using System.ComponentModel.DataAnnotations;
-using static SharedKernel.Core.Enums.Status.Status;
+using static SharedKernel.Domains.Enums.CurrentState;
 
 namespace SharedKernel.Bl.Dtos.User;
 

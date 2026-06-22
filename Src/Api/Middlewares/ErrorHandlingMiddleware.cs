@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using SharedKernel.Core.Exceptions;
+using SharedKernel.Bl.Exceptions;
 using System.ComponentModel.DataAnnotations;
 using System.Net;
 using System.Text.Json;

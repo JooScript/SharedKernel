@@ -1,4 +1,4 @@
-﻿using static SharedKernel.Core.Enums.Status.Status;
+﻿using static SharedKernel.Domains.Enums.CurrentState;
 using static SharedKernel.Bl.Enums.Events.EntityEnums;
 
 namespace SharedKernel.Bl.Events.Args;

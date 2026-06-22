@@ -31,7 +31,6 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\..\Utilities\CS_Utilities\Utils.csproj" />
-		<ProjectReference Include="..\Core\SharedKernel.Core.csproj" />
 		<ProjectReference Include="..\Domains\SharedKernel.Domains.csproj" />
 	</ItemGroup>
 

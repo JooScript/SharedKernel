@@ -12,9 +12,23 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Core\SharedKernel.Core.csproj" />
 		<ProjectReference Include="..\Da\SharedKernel.Da.csproj" />
 		<ProjectReference Include="..\Domains\SharedKernel.Domains.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Update="Resources\ResMessages.Designer.cs">
+			<DependentUpon>ResMessages.resx</DependentUpon>
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+		</Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Update="Resources\ResMessages.resx">
+			<LastGenOutput>ResMessages.Designer.cs</LastGenOutput>
+			<Generator>PublicResXFileCodeGenerator</Generator>
+		</EmbeddedResource>
 	</ItemGroup>
 
 </Project>

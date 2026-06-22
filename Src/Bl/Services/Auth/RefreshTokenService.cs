@@ -3,23 +3,23 @@ using SharedKernel.Bl.Contracts.Auth;
 using SharedKernel.Bl.Contracts.Events;
 using SharedKernel.Bl.Dtos.User;
 using SharedKernel.Bl.Services.Base;
-using SharedKernel.Domains.Contracts.Generic;
+using SharedKernel.Da.Contracts;
 using SharedKernel.Domains.Models.RefreshToken;
-using static SharedKernel.Core.Enums.Status.Status;
+using static SharedKernel.Domains.Enums.CurrentState;
 
 namespace SharedKernel.Bl.Services.Auth;
 
 public class RefreshTokenService<TDbContext>
-    : BaseService<TbRefreshToken, RefreshTokenDto, TDbContext>,
+    : SharedKernelBaseService<TbRefreshToken, RefreshTokenDto, TDbContext>,
     IRefreshTokens<TDbContext>
      where TDbContext : DbContext
 {
-    ITableCmdRepo<TbRefreshToken, TDbContext> repoCmd;
-    ITableQryRepo<TbRefreshToken, TDbContext> repoQry;
+    ISharedKernelTableCmdRepo<TbRefreshToken, TDbContext> repoCmd;
+    ISharedKernelTableQryRepo<TbRefreshToken, TDbContext> repoQry;
 
     public RefreshTokenService(
-    ITableQryRepo<TbRefreshToken, TDbContext> repoQry,
-    ITableCmdRepo<TbRefreshToken, TDbContext> repoCmd,
+    ISharedKernelTableQryRepo<TbRefreshToken, TDbContext> repoQry,
+    ISharedKernelTableCmdRepo<TbRefreshToken, TDbContext> repoCmd,
     IUserQry userServiceQuery,
     ICrudPublisher publisher)
     : base(repoQry, repoCmd, userServiceQuery, publisher)

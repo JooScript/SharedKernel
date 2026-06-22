@@ -8,8 +8,4 @@
 		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
 	</PropertyGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\Core\SharedKernel.Core.csproj" />
-	</ItemGroup>
-
 </Project>

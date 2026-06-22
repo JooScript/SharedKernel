@@ -1,4 +1,4 @@
-﻿using SharedKernel.Core.Resources;
+﻿using SharedKernel.Bl.Resources;
 using System.ComponentModel.DataAnnotations;
 
 namespace SharedKernel.Bl.Dtos.User;
