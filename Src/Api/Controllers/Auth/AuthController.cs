@@ -7,7 +7,7 @@ using SharedKernel.Bl.Constants;
 using SharedKernel.Bl.Contracts.Auth;
 using SharedKernel.Bl.Dtos.User;
 using System.Security.Claims;
-using static SharedKernel.Core.Enums.Status.Status;
+using static SharedKernel.Domains.Enums.CurrentState;
 namespace SharedKernel.Api.Controllers.Auth;
 
 /// <summary>
