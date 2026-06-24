@@ -12,7 +12,7 @@ namespace SharedKernel.Bl.Services.Auth;
 public class RefreshTokenService<TDbContext>
     : SharedKernelBaseService<TbRefreshToken, RefreshTokenDto, TDbContext>,
     IRefreshTokens<TDbContext>
-     where TDbContext : DbContext
+    where TDbContext : DbContext
 {
     ISharedKernelTableCmdRepo<TbRefreshToken, TDbContext> repoCmd;
     ISharedKernelTableQryRepo<TbRefreshToken, TDbContext> repoQry;
