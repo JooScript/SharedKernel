@@ -75,11 +75,11 @@ public abstract class SharedKernelBaseService<Tb, Dto, TDbContext>
 
     #region Cmd
 
-    public virtual async Task<(bool success, Guid id)> AddAsync(Dto entity, CancellationToken cancellationToken = default)
+    public virtual async Task<(bool success, Guid id)> AddAsync(Dto dto, CancellationToken cancellationToken = default)
     {
         try
         {
-            var dbObject = ToEntity(entity);
+            var dbObject = ToEntity(dto);
 
             if (dbObject is null)
                 throw new Exception("The Database Object Cannot be null");
