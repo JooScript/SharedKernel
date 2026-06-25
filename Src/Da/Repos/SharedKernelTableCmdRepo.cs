@@ -6,14 +6,17 @@ using static SharedKernel.Domains.Enums.CurrentState;
 
 namespace SharedKernel.Da.Repos;
 
-public class SharedKernelTableCmdRepo<Tb, TDbContext>(TDbContext context, ILogger<SharedKernelTableCmdRepo<Tb, TDbContext>> logger, ISharedKernelTableQryRepo<Tb, TDbContext> repoQuery)
+public class SharedKernelTableCmdRepo<Tb, TDbContext>(
+    TDbContext context,
+    ILogger<SharedKernelTableCmdRepo<Tb, TDbContext>> logger,
+    ISharedKernelTableQryRepo<Tb, TDbContext> repoQry)
     : ISharedKernelTableCmdRepo<Tb, TDbContext>
     where Tb : SharedKernelBaseTable
     where TDbContext : DbContext
 {
     protected readonly DbSet<Tb> dbSet = (context ?? throw new ArgumentNullException(nameof(context))).Set<Tb>();
 
-    public async Task<(bool success, Guid newId)> AddAsync(Tb entity, CancellationToken cancellationToken = default)
+    public virtual async Task<(bool success, Guid newId)> AddAsync(Tb entity, CancellationToken cancellationToken = default)
     {
         const string methodName = nameof(AddAsync);
 
@@ -37,7 +40,7 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(TDbContext context, ILogge
         }
     }
 
-    public async Task<(bool success, IEnumerable<Guid> newIds)> AddAsync(IEnumerable<Tb> entities, CancellationToken cancellationToken = default)
+    public virtual async Task<(bool success, IEnumerable<Guid> newIds)> AddAsync(IEnumerable<Tb> entities, CancellationToken cancellationToken = default)
     {
         const string methodName = nameof(AddAsync);
 
@@ -74,7 +77,7 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(TDbContext context, ILogge
         }
     }
 
-    public async Task<bool> UpdateAsync(Tb entity, CancellationToken cancellationToken = default)
+    public virtual async Task<bool> UpdateAsync(Tb entity, CancellationToken cancellationToken = default)
     {
         const string methodName = nameof(UpdateAsync);
         string _loggerMsg = $"Warning in {methodName} In Table Cmd Repo of {typeof(Tb)}";
@@ -122,7 +125,7 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(TDbContext context, ILogge
         }
     }
 
-    public async Task<bool> UpdateAsync(IEnumerable<Tb> entities, CancellationToken cancellationToken = default)
+    public virtual async Task<bool> UpdateAsync(IEnumerable<Tb> entities, CancellationToken cancellationToken = default)
     {
         const string methodName = nameof(UpdateAsync);
 
@@ -150,7 +153,7 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(TDbContext context, ILogge
 
             if (idsToFetch.Any())
             {
-                var dbEntities = await repoQuery.FindAsync(idsToFetch, cancellationToken);
+                var dbEntities = await repoQry.FindAsync(idsToFetch, cancellationToken);
 
                 foreach (var dbEntity in dbEntities)
                 {
@@ -187,12 +190,11 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(TDbContext context, ILogge
         }
     }
 
-    public async Task<bool> ChangeStatusAsync(Guid id, Guid userId, enCurrentState status = enCurrentState.Active, CancellationToken cancellationToken = default)
+    public virtual async Task<bool> ChangeStatusAsync(Guid id, Guid userId, enCurrentState status = enCurrentState.Active, CancellationToken cancellationToken = default)
     {
-
         try
         {
-            var entity = await repoQuery.FindAsync(id, cancellationToken);
+            var entity = await repoQry.FindAsync(id, cancellationToken);
 
             if (entity == null)
                 return false;
@@ -212,7 +214,7 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(TDbContext context, ILogge
         }
     }
 
-    public async Task<bool> ChangeStatusAsync(IEnumerable<Guid> ids, Guid userId, enCurrentState status = enCurrentState.Active, CancellationToken cancellationToken = default)
+    public virtual async Task<bool> ChangeStatusAsync(IEnumerable<Guid> ids, Guid userId, enCurrentState status = enCurrentState.Active, CancellationToken cancellationToken = default)
     {
         const string methodName = nameof(ChangeStatusAsync);
 
@@ -263,11 +265,11 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(TDbContext context, ILogge
         }
     }
 
-    public async Task<bool> HardDeleteAsync(Guid id, CancellationToken cancellationToken)
+    public virtual async Task<bool> HardDeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         try
         {
-            var entity = await repoQuery.FindAsync(id, cancellationToken);
+            var entity = await repoQry.FindAsync(id, cancellationToken);
 
             if (entity == null)
                 return false;
@@ -283,7 +285,7 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(TDbContext context, ILogge
         }
     }
 
-    public async Task<bool> HardDeleteAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken)
+    public virtual async Task<bool> HardDeleteAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken)
     {
         const string methodName = nameof(ChangeStatusAsync);
 
@@ -330,7 +332,7 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(TDbContext context, ILogge
         }
     }
 
-    public async Task<bool> HardDeleteAsync(Tb entity, CancellationToken cancellationToken)
+    public virtual async Task<bool> HardDeleteAsync(Tb entity, CancellationToken cancellationToken)
     {
         try
         {
@@ -350,7 +352,7 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(TDbContext context, ILogge
         }
     }
 
-    public async Task<bool> HardDeleteAsync(IEnumerable<Tb> entities, CancellationToken cancellationToken)
+    public virtual async Task<bool> HardDeleteAsync(IEnumerable<Tb> entities, CancellationToken cancellationToken)
     {
         try
         {
@@ -379,24 +381,14 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(TDbContext context, ILogge
         }
     }
 
-    public async Task<bool> SoftDeleteAsync(Guid id, Guid userId, CancellationToken cancellationToken)
+    public virtual async Task<bool> SoftDeleteAsync(Guid id, Guid userId, CancellationToken cancellationToken)
     {
         return await ChangeStatusAsync(id, userId, (int)enCurrentState.Deleted, cancellationToken);
     }
 
-    public async Task<bool> SoftDeleteAsync(IEnumerable<Guid> ids, Guid userId, CancellationToken cancellationToken)
+    public virtual async Task<bool> SoftDeleteAsync(IEnumerable<Guid> ids, Guid userId, CancellationToken cancellationToken)
     {
         return await ChangeStatusAsync(ids, userId, (int)enCurrentState.Deleted, cancellationToken);
-    }
-
-    public async Task<bool> SoftDeleteAsync(Tb entity, Guid userId, CancellationToken cancellationToken)
-    {
-        return await ChangeStatusAsync(entity.Id, userId, (int)enCurrentState.Deleted, cancellationToken);
-    }
-
-    public async Task<bool> SoftDeleteAsync(IEnumerable<Tb> entities, Guid userId, CancellationToken cancellationToken)
-    {
-        return await ChangeStatusAsync(entities.Select(e => e.Id), userId, (int)enCurrentState.Deleted, cancellationToken);
     }
 
 }
