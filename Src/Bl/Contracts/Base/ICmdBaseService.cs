@@ -36,8 +36,8 @@ public interface ICmdBaseService<Dto> where Dto : class
 
     Task<bool> DeactivateAsync(Guid id, bool fireEvent = true, CancellationToken cancellationToken = default);
 
-    Task<bool> DeleteAsync(Guid id, ServicesEnums.enDeleteType deleteType = ServicesEnums.enDeleteType.HardDelete, bool fireEvent = true, CancellationToken cancellationToken = default);
+    Task<bool> DeleteAsync(Guid id, ServicesEnums.DeleteType deleteType = ServicesEnums.DeleteType.HardDelete, bool fireEvent = true, CancellationToken cancellationToken = default);
 
-    Task<bool> DeleteAsync(List<Guid> Ids, ServicesEnums.enDeleteType deleteType = ServicesEnums.enDeleteType.HardDelete, bool fireEvent = true, CancellationToken cancellationToken = default);
+    Task<bool> DeleteAsync(List<Guid> Ids, ServicesEnums.DeleteType deleteType = ServicesEnums.DeleteType.HardDelete, bool fireEvent = true, CancellationToken cancellationToken = default);
 
 }

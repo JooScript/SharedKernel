@@ -2,8 +2,7 @@
 
 public class ServicesEnums
 {
-
-    public enum enDeleteType
+    public enum DeleteType : short
     {
         SoftDelete = 1,
         HardDelete = 2

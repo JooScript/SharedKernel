@@ -129,7 +129,7 @@ public abstract class SharedKernelBaseService<Tb, Dto, TDbContext>
 
     public virtual async Task<bool> DeactivateAsync(Guid id, bool fireEvent = true, CancellationToken cancellationToken = default) => await ChangeStatusAsync(id, enCurrentState.InActive, fireEvent);
 
-    public virtual async Task<bool> DeleteAsync(Guid id, enDeleteType deleteType = enDeleteType.HardDelete, bool fireEvent = true, CancellationToken cancellationToken = default)
+    public virtual async Task<bool> DeleteAsync(Guid id, DeleteType deleteType = DeleteType.HardDelete, bool fireEvent = true, CancellationToken cancellationToken = default)
     {
         var check = await CanDeleteAsync(id);
 
@@ -138,7 +138,7 @@ public abstract class SharedKernelBaseService<Tb, Dto, TDbContext>
             return false;
         }
 
-        if (deleteType == enDeleteType.SoftDelete)
+        if (deleteType == DeleteType.SoftDelete)
         {
             return await ChangeStatusAsync(id, enCurrentState.Deleted, fireEvent);
         }
@@ -148,7 +148,7 @@ public abstract class SharedKernelBaseService<Tb, Dto, TDbContext>
         }
     }
 
-    public virtual async Task<bool> DeleteAsync(List<Guid> Ids, enDeleteType deleteType, bool fireEvent, CancellationToken cancellationToken = default)
+    public virtual async Task<bool> DeleteAsync(List<Guid> Ids, DeleteType deleteType, bool fireEvent, CancellationToken cancellationToken = default)
     {
         bool succeeded = true;
 
