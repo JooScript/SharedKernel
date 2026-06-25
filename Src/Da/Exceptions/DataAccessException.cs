@@ -9,8 +9,6 @@ namespace SharedKernel.Da.Exceptions;
 /// </summary>
 public class DataAccessException : Exception
 {
-    public bool IsConcurrencyConflict { get; }
-
     /// <summary>
     /// Initializes a new instance of the DataAccessException class.
     /// </summary>
@@ -18,15 +16,10 @@ public class DataAccessException : Exception
     /// <param name="ex">The original exception that occurred.</param>
     /// <param name="customMessage">Custom message to include in the log.</param>
     /// <param name="isConcurrencyConflict">Flag indicating if this is a concurrency conflict</param>
-    public DataAccessException(Exception ex, string customMessage = "", bool isConcurrencyConflict = false) : base(customMessage, ex)
+    public DataAccessException(Exception ex, string customMessage = "") : base(customMessage, ex)
     {
-
-        IsConcurrencyConflict = isConcurrencyConflict;
-
         if (ex == null)
-        {
             throw new ArgumentNullException(nameof(ex));
-        }
 
         var methodName = new System.Diagnostics.StackTrace().GetFrame(1)?.GetMethod()?.Name ?? "UnknownMethod";
 
@@ -37,4 +30,9 @@ public class DataAccessException : Exception
         FileHelper.ErrorLogger(customException, true);
     }
 
+
+    public DataAccessException(string customMessage) : base(customMessage)
+    {
+
+    }
 }

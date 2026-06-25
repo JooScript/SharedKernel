@@ -117,7 +117,7 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
         }
         catch (DbUpdateConcurrencyException ex)
         {
-            throw new DataAccessException(ex, $"Concurrency conflict updating entity {entity.Id}", isConcurrencyConflict: true);
+            throw new DataAccessException(ex, $"Concurrency conflict updating entity {entity.Id}");
         }
         catch (Exception ex)
         {
@@ -182,7 +182,7 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
         }
         catch (DbUpdateConcurrencyException ex)
         {
-            throw new DataAccessException(ex, "Concurrency conflict updating entities", isConcurrencyConflict: true);
+            throw new DataAccessException(ex, "Concurrency conflict updating entities");
         }
         catch (Exception ex)
         {
