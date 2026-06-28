@@ -76,6 +76,46 @@ public class AuthController<TDbContext>(
     }
 
     /// <summary>
+    /// Create a new user.
+    /// </summary>
+    /// <param name="request">User registration data.</param>
+    /// <returns>
+    /// <see cref="IActionResult"/>
+    /// - 200 with success message if registration succeeds.
+    /// - 400 with validation or business errors if registration fails.
+    /// </returns>
+    [AllowAnonymous]
+    [HttpPost("create-user")]
+    [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<string>>> CreateUser([FromBody] CreateUserDto request)
+    {
+        if (request == null)
+        {
+            return BadRequest(ApiResponse<string>.FailResponse("Request body cannot be null."));
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ApiResponse<string>.FailResponse(
+                "Validation failed",
+                ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList()));
+        }
+
+        UserResultDto result = await userCmdService.CreateUserAsync(request);
+
+        if (result.Success)
+        {
+            ApiResponse<string>? response = ApiResponse<string>.SuccessResponse("Please Confirm The Email");
+            return Ok(response);
+        }
+
+        ApiResponse<string>? errorResponse = ApiResponse<string>.FailResponse("Registration failed", result.Errors);
+        return BadRequest(errorResponse);
+    }
+
+    /// <summary>
     /// Authenticates a user by validating their credentials and issuing access/refresh tokens.
     /// </summary>
     /// <param name="request">The login request containing email and password credentials.</param>
