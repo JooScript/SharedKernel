@@ -260,7 +260,7 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
         }
     }
 
-    public virtual async Task<bool> HardDeleteAsync(Guid id, CancellationToken cancellationToken)
+    public virtual async Task<bool> HardDeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -280,7 +280,7 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
         }
     }
 
-    public virtual async Task<bool> HardDeleteAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken)
+    public virtual async Task<bool> HardDeleteAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
     {
         const string methodName = nameof(ChangeStatusAsync);
 
@@ -327,7 +327,7 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
         }
     }
 
-    public virtual async Task<bool> HardDeleteAsync(Tb entity, CancellationToken cancellationToken)
+    public virtual async Task<bool> HardDeleteAsync(Tb entity, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -347,7 +347,7 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
         }
     }
 
-    public virtual async Task<bool> HardDeleteAsync(IEnumerable<Tb> entities, CancellationToken cancellationToken)
+    public virtual async Task<bool> HardDeleteAsync(IEnumerable<Tb> entities, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -376,12 +376,12 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
         }
     }
 
-    public virtual async Task<bool> SoftDeleteAsync(Guid id, Guid userId, CancellationToken cancellationToken)
+    public virtual async Task<bool> SoftDeleteAsync(Guid id, Guid userId, CancellationToken cancellationToken = default)
     {
         return await ChangeStatusAsync(id, userId, (int)CurrentStateType.Deleted, cancellationToken);
     }
 
-    public virtual async Task<bool> SoftDeleteAsync(IEnumerable<Guid> ids, Guid userId, CancellationToken cancellationToken)
+    public virtual async Task<bool> SoftDeleteAsync(IEnumerable<Guid> ids, Guid userId, CancellationToken cancellationToken = default)
     {
         return await ChangeStatusAsync(ids, userId, (int)CurrentStateType.Deleted, cancellationToken);
     }
