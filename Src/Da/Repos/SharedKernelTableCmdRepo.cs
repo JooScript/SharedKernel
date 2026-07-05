@@ -189,7 +189,7 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
     {
         try
         {
-            var entity = await repoQry.FindAsync(id, cancellationToken);
+            var entity = await repoQry.GetTrackedOrLoadAsync(id, cancellationToken);
 
             if (entity == null)
                 return false;
