@@ -1,4 +1,4 @@
-﻿using static SharedKernel.Domains.Enums.CurrentState;
+﻿using static SharedKernel.Domains.Types.CurrentState;
 
 namespace SharedKernel.Bl.Dtos.Base;
 
@@ -6,6 +6,6 @@ public abstract class SharedKernelBaseDto
 {
     public Guid Id { get; set; } = Guid.Empty;
 
-    public enCurrentState CurrentState { get; set; } = enCurrentState.Active;
+    public CurrentStateType CurrentState { get; set; } = CurrentStateType.Active;
 
 }

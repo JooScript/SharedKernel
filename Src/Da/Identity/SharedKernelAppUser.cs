@@ -1,6 +1,6 @@
 ﻿using System;
 using Microsoft.AspNetCore.Identity;
-using static SharedKernel.Domains.Enums.CurrentState;
+using static SharedKernel.Domains.Types.CurrentState;
 
 namespace SharedKernel.Da.Identity;
 
@@ -15,6 +15,6 @@ public class SharedKernelAppUser : IdentityUser<Guid>
 
     public string LastName { get; set; } = null!;
 
-    public enCurrentState CurrentState { get; set; }
+    public CurrentStateType CurrentState { get; set; }
 
 }

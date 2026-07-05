@@ -1,10 +1,10 @@
-﻿using static SharedKernel.Domains.Enums.CurrentState;
+﻿using static SharedKernel.Domains.Types.CurrentState;
 
 public abstract class SharedKernelBaseTable
 {
     public Guid Id { get; set; } = default!;
 
-    public enCurrentState CurrentState { get; set; } = enCurrentState.Active;
+    public CurrentStateType CurrentState { get; set; } = CurrentStateType.Active;
 
     public DateTimeOffset CreatedAt { get; set; }
 

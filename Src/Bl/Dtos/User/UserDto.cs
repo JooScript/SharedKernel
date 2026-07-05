@@ -1,6 +1,6 @@
 ﻿using SharedKernel.Bl.Resources;
 using System.ComponentModel.DataAnnotations;
-using static SharedKernel.Domains.Enums.CurrentState;
+using static SharedKernel.Domains.Types.CurrentState;
 
 namespace SharedKernel.Bl.Dtos.User;
 
@@ -39,7 +39,7 @@ public class UserDto
     [Phone(ErrorMessageResourceType = typeof(ResMessages), ErrorMessageResourceName = "InvalidPhone")]
     public string? Phone { get; set; }
 
-    public enCurrentState CurrentState { get; set; }
+    public CurrentStateType CurrentState { get; set; }
 
     public List<string>? Roles { get; set; }
 

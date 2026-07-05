@@ -5,7 +5,7 @@ using SharedKernel.Bl.Dtos.User;
 using SharedKernel.Bl.Services.Base;
 using SharedKernel.Da.Contracts;
 using SharedKernel.Domains.Models.RefreshToken;
-using static SharedKernel.Domains.Enums.CurrentState;
+using static SharedKernel.Domains.Types.CurrentState;
 
 namespace SharedKernel.Bl.Services.Auth;
 
@@ -30,11 +30,11 @@ public class RefreshTokenService<TDbContext>
 
     public async Task<bool> Refresh(RefreshTokenDto tokenDto, CancellationToken cancellationToken = default)
     {
-        List<TbRefreshToken>? tokenList = await repoQry.GetListAsync(a => a.CreatedBy == tokenDto.UserId && a.CurrentState == enCurrentState.Active, cancellationToken);
+        List<TbRefreshToken>? tokenList = await repoQry.GetListAsync(a => a.CreatedBy == tokenDto.UserId && a.CurrentState == CurrentStateType.Active, cancellationToken);
 
         foreach (TbRefreshToken dbToken in tokenList)
         {
-            await repoCmd.ChangeStatusAsync(dbToken.Id, tokenDto.UserId, enCurrentState.InActive, cancellationToken);
+            await repoCmd.ChangeStatusAsync(dbToken.Id, tokenDto.UserId, CurrentStateType.InActive, cancellationToken);
         }
 
         TbRefreshToken dbTokens = ToEntity(tokenDto);

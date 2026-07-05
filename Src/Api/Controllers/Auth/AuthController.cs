@@ -7,7 +7,7 @@ using SharedKernel.Bl.Constants;
 using SharedKernel.Bl.Contracts.Auth;
 using SharedKernel.Bl.Dtos.User;
 using System.Security.Claims;
-using static SharedKernel.Domains.Enums.CurrentState;
+using static SharedKernel.Domains.Types.CurrentState;
 namespace SharedKernel.Api.Controllers.Auth;
 
 /// <summary>
@@ -186,7 +186,7 @@ public class AuthController<TDbContext>(
             Token = refreshToken,
             UserId = userData.user.Id,
             Expires = DateTime.UtcNow.AddDays(7),
-            CurrentState = enCurrentState.Active
+            CurrentState = CurrentStateType.Active
         };
 
         await refreshTokenService.Refresh(storedRefreshToken);
@@ -431,7 +431,7 @@ public class AuthController<TDbContext>(
         RefreshTokenDto? storedToken = await refreshTokenService.GetByToken(refreshToken);
 
         if (storedToken == null ||
-            storedToken.CurrentState == enCurrentState.InActive ||
+            storedToken.CurrentState == CurrentStateType.InActive ||
             storedToken.Expires < DateTime.UtcNow)
         {
             return Unauthorized(ApiResponse<object>.FailResponse("Invalid or expired refresh token."));
@@ -487,7 +487,7 @@ public class AuthController<TDbContext>(
         var storedToken = await refreshTokenService.GetByToken(refreshToken);
 
         if (storedToken == null ||
-            storedToken.CurrentState == enCurrentState.InActive ||
+            storedToken.CurrentState == CurrentStateType.InActive ||
             storedToken.Expires < DateTime.UtcNow)
         {
             return Unauthorized(ApiResponse<object>.FailResponse("Invalid or expired refresh token."));
@@ -501,7 +501,7 @@ public class AuthController<TDbContext>(
             Token = newRefreshToken,
             UserId = storedToken.UserId,
             Expires = DateTime.UtcNow.AddDays(7),
-            CurrentState = enCurrentState.Active
+            CurrentState = CurrentStateType.Active
         };
 
         await refreshTokenService.Refresh(newRefreshDto);

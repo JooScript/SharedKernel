@@ -1,5 +1,5 @@
 using System.Collections;
-using static SharedKernel.Domains.Enums.CurrentState;
+using static SharedKernel.Domains.Types.CurrentState;
 
 namespace SharedKernel.Bl.Services.Base;
 
@@ -10,7 +10,7 @@ public class BlHelper
         dbObject.Id = Guid.Empty;
         dbObject.CreatedBy = loggedInUserId;
         dbObject.CreatedAt = DateTimeOffset.UtcNow;
-        dbObject.CurrentState = enCurrentState.Active;
+        dbObject.CurrentState = CurrentStateType.Active;
 
         return dbObject;
     }

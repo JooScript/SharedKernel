@@ -190,7 +190,7 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
         }
     }
 
-    public virtual async Task<bool> ChangeStatusAsync(Guid id, Guid userId, enCurrentState status = enCurrentState.Active, CancellationToken cancellationToken = default)
+    public virtual async Task<bool> ChangeStatusAsync(Guid id, Guid userId, CurrentStateType status = CurrentStateType.Active, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -214,7 +214,7 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
         }
     }
 
-    public virtual async Task<bool> ChangeStatusAsync(IEnumerable<Guid> ids, Guid userId, enCurrentState status = enCurrentState.Active, CancellationToken cancellationToken = default)
+    public virtual async Task<bool> ChangeStatusAsync(IEnumerable<Guid> ids, Guid userId, CurrentStateType status = CurrentStateType.Active, CancellationToken cancellationToken = default)
     {
         const string methodName = nameof(ChangeStatusAsync);
 
@@ -383,12 +383,12 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
 
     public virtual async Task<bool> SoftDeleteAsync(Guid id, Guid userId, CancellationToken cancellationToken)
     {
-        return await ChangeStatusAsync(id, userId, (int)enCurrentState.Deleted, cancellationToken);
+        return await ChangeStatusAsync(id, userId, (int)CurrentStateType.Deleted, cancellationToken);
     }
 
     public virtual async Task<bool> SoftDeleteAsync(IEnumerable<Guid> ids, Guid userId, CancellationToken cancellationToken)
     {
-        return await ChangeStatusAsync(ids, userId, (int)enCurrentState.Deleted, cancellationToken);
+        return await ChangeStatusAsync(ids, userId, (int)CurrentStateType.Deleted, cancellationToken);
     }
 
 }

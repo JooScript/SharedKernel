@@ -15,9 +15,9 @@ public interface ISharedKernelTableCmdRepo<Tb, TDbContext>
 
     Task<bool> UpdateAsync(IEnumerable<Tb> entities, CancellationToken cancellationToken = default);
 
-    Task<bool> ChangeStatusAsync(Guid id, Guid userId, enCurrentState status = enCurrentState.Active, CancellationToken cancellationToken = default);
+    Task<bool> ChangeStatusAsync(Guid id, Guid userId, CurrentStateType status = CurrentStateType.Active, CancellationToken cancellationToken = default);
 
-    Task<bool> ChangeStatusAsync(IEnumerable<Guid> ids, Guid userId, enCurrentState status = enCurrentState.Active, CancellationToken cancellationToken = default);
+    Task<bool> ChangeStatusAsync(IEnumerable<Guid> ids, Guid userId, CurrentStateType status = CurrentStateType.Active, CancellationToken cancellationToken = default);
 
     Task<bool> HardDeleteAsync(Guid id, CancellationToken cancellationToken = default);
 
