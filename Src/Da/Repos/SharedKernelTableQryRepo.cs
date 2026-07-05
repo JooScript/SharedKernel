@@ -16,6 +16,16 @@ public class SharedKernelTableQryRepo<Tb, TDbContext>(
 {
     protected readonly DbSet<Tb> tbDbSet = (context ?? throw new ArgumentNullException(nameof(context))).Set<Tb>();
 
+    public async Task<Tb?> GetTrackedOrLoadAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var entity = tbDbSet.Local.FirstOrDefault(e => e.Id == id);
+
+        if (entity is not null)
+            return entity;
+
+        return await FindAsync(id, cancellationToken);
+    }
+
     public virtual async Task<Tb?> FindAsync(Guid id, CancellationToken cancellationToken = default)
     {
         try
@@ -25,6 +35,32 @@ public class SharedKernelTableQryRepo<Tb, TDbContext>(
         catch (Exception ex)
         {
             throw new DataAccessException(ex, $"Failed to get entity by ID {id} of type {typeof(Tb).Name}");
+        }
+    }
+
+    public virtual async Task<TResult?> FindAsync<TResult>(
+    Guid id,
+    Expression<Func<Tb, TResult>> selector,
+    CancellationToken cancellationToken = default,
+    params Expression<Func<Tb, object>>[] includes)
+    {
+        try
+        {
+            IQueryable<Tb> query = tbDbSet.AsNoTracking();
+
+            foreach (var include in includes)
+                query = query.Include(include);
+
+            return await query
+                .Where(x => x.Id == id)
+                .Select(selector)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            throw new DataAccessException(
+                ex,
+                $"Failed to get entity by ID {id} of type {typeof(Tb).Name}");
         }
     }
 
