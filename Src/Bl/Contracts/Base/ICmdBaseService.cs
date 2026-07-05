@@ -1,4 +1,6 @@
 ﻿using SharedKernel.Bl.Enums;
+using SharedKernel.Domains.Types;
+using static SharedKernel.Bl.Enums.ServicesEnums;
 
 namespace SharedKernel.Bl.Contracts.Base;
 
@@ -13,7 +15,7 @@ public interface ICmdBaseService<Dto> where Dto : class
     /// success - indicates if the operation succeeded
     /// id - the int of the newly created entity (valid when success is true)
     /// </returns>
-    Task<(bool success, Guid id)> AddAsync(Dto entity, CancellationToken cancellationToken = default);
+    Task<SaveResultType> AddAsync(Dto entity, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Updates an existing entity based on the provided DTO
@@ -22,7 +24,7 @@ public interface ICmdBaseService<Dto> where Dto : class
     /// <returns>
     /// Task representing the asynchronous operation with a boolean indicating success
     /// </returns>
-    Task<bool> UpdateAsync(Dto entity, bool fireEvent = true, CancellationToken cancellationToken = default);
+    Task<bool> UpdateAsync(Dto entity, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Changes the status of an entity
@@ -32,12 +34,12 @@ public interface ICmdBaseService<Dto> where Dto : class
     /// <returns>
     /// Task representing the asynchronous operation with a boolean indicating success
     /// </returns>
-    Task<bool> ActivateAsync(Guid id, bool fireEvent = true, CancellationToken cancellationToken = default);
+    Task<bool> ActivateAsync(Guid id, CancellationToken cancellationToken = default);
 
-    Task<bool> DeactivateAsync(Guid id, bool fireEvent = true, CancellationToken cancellationToken = default);
+    Task<bool> DeactivateAsync(Guid id, CancellationToken cancellationToken = default);
 
-    Task<bool> DeleteAsync(Guid id, ServicesEnums.DeleteType deleteType = ServicesEnums.DeleteType.HardDelete, bool fireEvent = true, CancellationToken cancellationToken = default);
+    Task<bool> DeleteAsync(Guid id, DeleteType deleteType = DeleteType.HardDelete, CancellationToken cancellationToken = default);
 
-    Task<bool> DeleteAsync(List<Guid> Ids, ServicesEnums.DeleteType deleteType = ServicesEnums.DeleteType.HardDelete, bool fireEvent = true, CancellationToken cancellationToken = default);
+    Task<bool> DeleteAsync(List<Guid> Ids, DeleteType deleteType = DeleteType.HardDelete, CancellationToken cancellationToken = default);
 
 }
