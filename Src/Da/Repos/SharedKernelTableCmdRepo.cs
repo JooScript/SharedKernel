@@ -2,7 +2,8 @@
 using Microsoft.Extensions.Logging;
 using SharedKernel.Da.Contracts;
 using SharedKernel.Da.Exceptions;
-using static SharedKernel.Domains.Enums.CurrentState;
+using SharedKernel.Domains.Types;
+using static SharedKernel.Domains.Types.CurrentState;
 
 namespace SharedKernel.Da.Repos;
 
@@ -14,9 +15,9 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
     where Tb : SharedKernelBaseTable
     where TDbContext : DbContext
 {
-    protected readonly DbSet<Tb> dbSet = (context ?? throw new ArgumentNullException(nameof(context))).Set<Tb>();
+    protected readonly DbSet<Tb> tbDbSet = (context ?? throw new ArgumentNullException(nameof(context))).Set<Tb>();
 
-    public virtual async Task<(bool success, Guid newId)> AddAsync(Tb entity, CancellationToken cancellationToken = default)
+    public virtual async Task<SaveResultType> AddAsync(Tb entity, CancellationToken cancellationToken = default)
     {
         const string methodName = nameof(AddAsync);
 
@@ -30,9 +31,9 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
         {
             entity.Id = Guid.Empty;
             entity.CreatedAt = DateTime.UtcNow;
-            await dbSet.AddAsync(entity, cancellationToken);
+            await tbDbSet.AddAsync(entity, cancellationToken);
             await context.SaveChangesAsync(cancellationToken);
-            return (true, entity.Id);
+            return new(true, entity.Id);
         }
         catch (Exception ex)
         {
@@ -40,7 +41,7 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
         }
     }
 
-    public virtual async Task<(bool success, IEnumerable<Guid> newIds)> AddAsync(IEnumerable<Tb> entities, CancellationToken cancellationToken = default)
+    public virtual async Task<bool> AddAsync(IEnumerable<Tb> entities, CancellationToken cancellationToken = default)
     {
         const string methodName = nameof(AddAsync);
 
@@ -51,9 +52,7 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
         }
 
         if (!entities.Any())
-        {
-            return (true, Enumerable.Empty<Guid>());
-        }
+            return true;
 
         try
         {
@@ -66,10 +65,10 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
                 entity.CreatedAt = utcNow;
             }
 
-            await dbSet.AddRangeAsync(entityList, cancellationToken);
+            await tbDbSet.AddRangeAsync(entityList, cancellationToken);
             await context.SaveChangesAsync(cancellationToken);
 
-            return (true, entityList.Select(e => e.Id));
+            return true;
         }
         catch (Exception ex)
         {
@@ -90,11 +89,11 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
 
         try
         {
-            var dbData = dbSet.Local.FirstOrDefault(e => e.Id == entity.Id);
+            var dbData = tbDbSet.Local.FirstOrDefault(e => e.Id == entity.Id);
 
             if (dbData is null)
             {
-                dbData = await dbSet.FirstOrDefaultAsync(x => x.Id == entity.Id, cancellationToken);
+                dbData = await tbDbSet.FirstOrDefaultAsync(x => x.Id == entity.Id, cancellationToken);
 
                 if (dbData is null)
                 {
@@ -232,7 +231,7 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
         try
         {
             var distinctIds = ids.Distinct().ToList();
-            var entities = await dbSet
+            var entities = await tbDbSet
                 .Where(e => distinctIds.Contains(e.Id))
                 .ToListAsync(cancellationToken);
 
@@ -303,7 +302,7 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
         try
         {
             var distinctIds = ids.Distinct().ToList();
-            var entities = await dbSet
+            var entities = await tbDbSet
                 .Where(e => distinctIds.Contains(e.Id))
                 .ToListAsync(cancellationToken);
 
