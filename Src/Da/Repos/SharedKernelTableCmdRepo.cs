@@ -89,17 +89,13 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
 
         try
         {
-            var dbData = tbDbSet.Local.FirstOrDefault(e => e.Id == entity.Id);
+            var dbData = await repoQry.GetTrackedOrLoadAsync(entity.Id, cancellationToken);
 
             if (dbData is null)
             {
-                dbData = await tbDbSet.FirstOrDefaultAsync(x => x.Id == entity.Id, cancellationToken);
+                logger.LogWarning($"There is no {nameof(Tb)} entity with id {entity.Id}");
 
-                if (dbData is null)
-                {
-                    logger.LogWarning($"There is no {typeof(Tb)} entity exist with id {entity.Id}");
-                    return false;
-                }
+                return false;
             }
 
             entity.UpdatedAt = DateTimeOffset.UtcNow;
