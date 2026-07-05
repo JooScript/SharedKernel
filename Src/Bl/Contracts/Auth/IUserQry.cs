@@ -9,6 +9,8 @@ namespace SharedKernel.Bl.Contracts.Auth;
 
 public interface IUserQry
 {
+    Guid LoggedInUserId { get; }
+
     Task<UserDto?> GetByIdAsync(Guid userId);
 
     Task<UserDto?> GetByEmailAsync(string email);
