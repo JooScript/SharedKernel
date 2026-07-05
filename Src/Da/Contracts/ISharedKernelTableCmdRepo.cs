@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using static SharedKernel.Domains.Enums.CurrentState;
+using SharedKernel.Domains.Types;
+using static SharedKernel.Domains.Types.CurrentState;
 
 namespace SharedKernel.Da.Contracts;
 
@@ -7,9 +8,9 @@ public interface ISharedKernelTableCmdRepo<Tb, TDbContext>
     where Tb : SharedKernelBaseTable
     where TDbContext : DbContext
 {
-    Task<(bool success, Guid newId)> AddAsync(Tb entity, CancellationToken cancellationToken = default);
+    Task<SaveResultType> AddAsync(Tb entity, CancellationToken cancellationToken = default);
 
-    Task<(bool success, IEnumerable<Guid> newIds)> AddAsync(IEnumerable<Tb> entities, CancellationToken cancellationToken = default);
+    Task<bool> AddAsync(IEnumerable<Tb> entities, CancellationToken cancellationToken = default);
 
     Task<bool> UpdateAsync(Tb entity, CancellationToken cancellationToken = default);
 
