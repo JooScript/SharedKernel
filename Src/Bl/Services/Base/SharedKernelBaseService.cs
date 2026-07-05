@@ -6,9 +6,10 @@ using SharedKernel.Bl.Events.Args;
 using SharedKernel.Bl.Exceptions;
 using SharedKernel.Bl.Models;
 using SharedKernel.Da.Contracts;
+using SharedKernel.Domains.Types;
 using System.Linq.Expressions;
 using static SharedKernel.Bl.Enums.ServicesEnums;
-using static SharedKernel.Domains.Enums.CurrentState;
+using static SharedKernel.Domains.Types.CurrentState;
 
 namespace SharedKernel.Bl.Services.Base;
 
@@ -57,11 +58,14 @@ public abstract class SharedKernelBaseService<Tb, Dto, TDbContext>
         return entity == null ? null : ToDto(entity);
     }
 
-    public virtual async Task<int> CountAsync(CancellationToken cancellationToken) => await _repoQry.CountAsync(e => e.CurrentState > 0, cancellationToken);
+    public virtual async Task<int> CountAsync(CancellationToken cancellationToken)
+        => await _repoQry.CountAsync(e => e.CurrentState > 0, cancellationToken);
 
-    public virtual async Task<bool> IsExistsAsync(Expression<Func<Tb, bool>> filter, CancellationToken cancellationToken = default) => await _repoQry.IsExistsAsync(filter, cancellationToken);
+    public virtual async Task<bool> IsExistsAsync(Expression<Func<Tb, bool>> filter, CancellationToken cancellationToken = default)
+        => await _repoQry.IsExistsAsync(filter, cancellationToken);
 
-    public virtual async Task<bool> IsExistsAsync(Guid Id, CancellationToken cancellationToken) => await _repoQry.IsExistsAsync(Id, cancellationToken);
+    public virtual async Task<bool> IsExistsAsync(Guid Id, CancellationToken cancellationToken)
+        => await _repoQry.IsExistsAsync(Id, cancellationToken);
 
     public virtual async Task<EntityValidationResult> CanDeleteAsync(Guid id)
     {
@@ -75,7 +79,7 @@ public abstract class SharedKernelBaseService<Tb, Dto, TDbContext>
 
     #region Cmd
 
-    public virtual async Task<(bool success, Guid id)> AddAsync(Dto dto, CancellationToken cancellationToken = default)
+    public virtual async Task<SaveResultType> AddAsync(Dto dto, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -86,7 +90,7 @@ public abstract class SharedKernelBaseService<Tb, Dto, TDbContext>
 
             var result = await _repoCmd.AddAsync(BlHelper.NormalizeDbObjToAdd(dbObject, _userServiceQuery.GetLoggedInUserId()));
 
-            return (result.success, result.newId);
+            return result;
         }
         catch (Exception ex)
         {
@@ -94,7 +98,7 @@ public abstract class SharedKernelBaseService<Tb, Dto, TDbContext>
         }
     }
 
-    public async virtual Task<bool> UpdateAsync(Dto entity, bool fireEvent = true, CancellationToken cancellationToken = default)
+    public async virtual Task<bool> UpdateAsync(Dto entity, CancellationToken cancellationToken = default)
     {
         var check = await CanUpdateAsync(entity);
 
@@ -104,13 +108,13 @@ public abstract class SharedKernelBaseService<Tb, Dto, TDbContext>
         return await _repoCmd.UpdateAsync(BlHelper.NormalizeDbObjToUpdate(ToEntity(entity), _userServiceQuery.GetLoggedInUserId()));
     }
 
-    public virtual async Task<bool> ChangeStatusAsync(Guid id, enCurrentState status = enCurrentState.Active, bool fireEvent = true, CancellationToken cancellationToken = default)
+    public virtual async Task<bool> ChangeStatusAsync(Guid id, CurrentStateType status = CurrentStateType.Active, CancellationToken cancellationToken = default)
     {
         Tb? entity = await _repoQry.FindAsync(id);
 
         if (entity == null) return false;
 
-        enCurrentState previousState = entity.CurrentState;
+        CurrentStateType previousState = entity.CurrentState;
 
         entity.CurrentState = status;
         Guid userId = _userServiceQuery.GetLoggedInUserId();
@@ -118,18 +122,14 @@ public abstract class SharedKernelBaseService<Tb, Dto, TDbContext>
 
         bool success = await _repoCmd.UpdateAsync(entity);
 
-        if (success && fireEvent)
-        {
-            _publisher.Publish(new EntityStatusChangedEventArgs(entity, userId, previousState, status));
-        }
         return success;
     }
 
-    public virtual async Task<bool> ActivateAsync(Guid id, bool fireEvent = true, CancellationToken cancellationToken = default) => await ChangeStatusAsync(id, enCurrentState.Active, fireEvent);
+    public virtual async Task<bool> ActivateAsync(Guid id, CancellationToken cancellationToken = default) => await ChangeStatusAsync(id, CurrentStateType.Active, cancellationToken);
 
-    public virtual async Task<bool> DeactivateAsync(Guid id, bool fireEvent = true, CancellationToken cancellationToken = default) => await ChangeStatusAsync(id, enCurrentState.InActive, fireEvent);
+    public virtual async Task<bool> DeactivateAsync(Guid id, CancellationToken cancellationToken = default) => await ChangeStatusAsync(id, CurrentStateType.InActive, cancellationToken);
 
-    public virtual async Task<bool> DeleteAsync(Guid id, DeleteType deleteType = DeleteType.HardDelete, bool fireEvent = true, CancellationToken cancellationToken = default)
+    public virtual async Task<bool> DeleteAsync(Guid id, DeleteType deleteType = DeleteType.HardDelete, CancellationToken cancellationToken = default)
     {
         var check = await CanDeleteAsync(id);
 
@@ -140,7 +140,7 @@ public abstract class SharedKernelBaseService<Tb, Dto, TDbContext>
 
         if (deleteType == DeleteType.SoftDelete)
         {
-            return await ChangeStatusAsync(id, enCurrentState.Deleted, fireEvent);
+            return await ChangeStatusAsync(id, CurrentStateType.Deleted, cancellationToken);
         }
         else
         {
@@ -148,13 +148,13 @@ public abstract class SharedKernelBaseService<Tb, Dto, TDbContext>
         }
     }
 
-    public virtual async Task<bool> DeleteAsync(List<Guid> Ids, DeleteType deleteType, bool fireEvent, CancellationToken cancellationToken = default)
+    public virtual async Task<bool> DeleteAsync(List<Guid> Ids, DeleteType deleteType, CancellationToken cancellationToken = default)
     {
         bool succeeded = true;
 
         foreach (var id in Ids)
         {
-            succeeded &= await DeleteAsync(id, deleteType, fireEvent);
+            succeeded &= await DeleteAsync(id, deleteType, cancellationToken);
         }
 
         return succeeded;
