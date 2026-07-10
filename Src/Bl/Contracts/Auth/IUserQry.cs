@@ -1,9 +1,5 @@
 ﻿using SharedKernel.Bl.Dtos.User;
-using System;
-using System.Collections.Generic;
 using System.Security.Claims;
-using System.Threading.Tasks;
-
 
 namespace SharedKernel.Bl.Contracts.Auth;
 
