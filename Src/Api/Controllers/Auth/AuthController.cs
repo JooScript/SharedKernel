@@ -28,13 +28,13 @@ public class AuthController<TDbContext>(
     IToken tokenService,
     IUserQry userQryService,
     IUserCmd userCmdService,
-    IRefreshTokens<TDbContext> refreshTokenService)
-    : ControllerBase
+    IRefreshTokens<TDbContext> refreshTokenService) :
+    ControllerBase
     where TDbContext : DbContext
 {
-    private string RefreshTokenCookieName => "RefreshToken";
-
-    private string AccessTokenCookieName => "AccessToken";
+    string RefreshTokenCookieName => "X-REFRESH-TOKEN";
+    string CSRFTokenCookieName => "X-CSRF-TOKEN";
+    string CSRFTokenHeaderName => "X-CSRF-TOKEN";
 
     /// <summary>
     /// Create a new admin.
@@ -178,37 +178,32 @@ public class AuthController<TDbContext>(
 
         (Claim[] claims, UserDto user) userData = await userQryService.GetClaims(request.Email);
         string? accessToken = tokenService.GenerateAccessToken(userData.claims);
-        string? refreshToken = tokenService.GenerateRefreshToken();
+        string? refreshToken = refreshTokenService.GenerateRefreshToken();
 
-        RefreshTokenDto? storedRefreshToken = new RefreshTokenDto
+        var newRefreshDto = new RefreshTokenDto
         {
             Id = Guid.NewGuid(),
             Token = refreshToken,
             UserId = userData.user.Id,
+            CSRFToken = Guid.NewGuid(),
             Expires = DateTime.UtcNow.AddDays(7),
             CurrentState = CurrentStateType.Active
         };
 
-        await refreshTokenService.Refresh(storedRefreshToken);
+        await refreshTokenService.Refresh(newRefreshDto);
 
-        Response.Cookies.Append(RefreshTokenCookieName, refreshToken, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = true,
-            Expires = storedRefreshToken.Expires
-        });
+        AppendCookies(newRefreshDto);
 
         var loginResponse = new
         {
-            userInfo = new
+            UserInfo = new
             {
-                UserName = userData.user.UserName,
-                Email = userData.user.Email,
-                FirstName = userData.user.FirstName,
-                LastName = userData.user.LastName,
+                userData.user.UserName,
+                userData.user.Email,
+                userData.user.FirstName,
+                userData.user.LastName,
             },
-            AccessToken = accessToken,
-            RefreshToken = refreshToken
+            AccessToken = accessToken
         };
 
         return Ok(ApiResponse<object>.SuccessResponse(loginResponse, "Login successful"));
@@ -227,7 +222,7 @@ public class AuthController<TDbContext>(
         await userCmdService.LogoutAsync();
 
         Response.Cookies.Delete(RefreshTokenCookieName);
-        Response.Cookies.Delete(AccessTokenCookieName);
+        Response.Cookies.Delete(CSRFTokenCookieName);
 
         return Ok(ApiResponse<bool>.SuccessResponse(true, "Logged out successfully."));
     }
@@ -421,31 +416,25 @@ public class AuthController<TDbContext>(
     [HttpPost("refresh-access-token")]
     [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<ApiResponse<object>>> RefreshAccessToken()
+    public async Task<IActionResult> RefreshAccessToken()
     {
         if (!Request.Cookies.TryGetValue(RefreshTokenCookieName, out string? refreshToken))
         {
             return Unauthorized(ApiResponse<object>.FailResponse("No refresh token found."));
         }
 
-        RefreshTokenDto? storedToken = await refreshTokenService.GetByToken(refreshToken);
+        var storedRefreshToken = await refreshTokenService.GetByToken(refreshToken);
 
-        if (storedToken == null ||
-            storedToken.CurrentState == CurrentStateType.InActive ||
-            storedToken.Expires < DateTime.UtcNow)
-        {
+        string? storedCsrfToken = Request.Headers[CSRFTokenHeaderName].FirstOrDefault();
+
+        if (storedRefreshToken == null ||
+            storedRefreshToken.CurrentState == CurrentStateType.InActive ||
+            storedRefreshToken.CSRFToken.ToString() == storedCsrfToken ||
+            storedRefreshToken.Expires < DateTime.UtcNow)
             return Unauthorized(ApiResponse<object>.FailResponse("Invalid or expired refresh token."));
-        }
 
-        var claims = await userQryService.GetClaims(storedToken.UserId);
+        var claims = await userQryService.GetClaims(storedRefreshToken.UserId);
         var newAccessToken = tokenService.GenerateAccessToken(claims.claims);
-
-        Response.Cookies.Append(AccessTokenCookieName, newAccessToken, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = true,
-            Expires = DateTime.UtcNow.AddMinutes(15)
-        });
 
         return Ok(ApiResponse<string>.SuccessResponse(newAccessToken, "Access token refreshed successfully."));
     }
@@ -474,44 +463,39 @@ public class AuthController<TDbContext>(
     /// </list>
     /// </returns>
     [AllowAnonymous]
-    [HttpPost("refresh")]
+    [HttpPost("refresh-refresh-token")]
     [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<ApiResponse<object>>> Refresh()
+    public async Task<IActionResult> RefreshRefreshToken()
     {
         if (!Request.Cookies.TryGetValue(RefreshTokenCookieName, out string? refreshToken))
-        {
             return Unauthorized(ApiResponse<object>.FailResponse("No refresh token found."));
-        }
 
-        var storedToken = await refreshTokenService.GetByToken(refreshToken);
+        var storedRefreshToken = await refreshTokenService.GetByToken(refreshToken);
 
-        if (storedToken == null ||
-            storedToken.CurrentState == CurrentStateType.InActive ||
-            storedToken.Expires < DateTime.UtcNow)
-        {
+        string? storedCsrfToken = Request.Headers[CSRFTokenHeaderName].FirstOrDefault();
+
+        if (storedRefreshToken == null ||
+            storedRefreshToken.CurrentState == CurrentStateType.InActive ||
+            storedRefreshToken.CSRFToken.ToString() == storedCsrfToken ||
+            storedRefreshToken.Expires < DateTime.UtcNow)
             return Unauthorized(ApiResponse<object>.FailResponse("Invalid or expired refresh token."));
-        }
 
-        string? newRefreshToken = tokenService.GenerateRefreshToken();
+        string? newRefreshToken = refreshTokenService.GenerateRefreshToken();
 
-        RefreshTokenDto? newRefreshDto = new RefreshTokenDto
+        var newRefreshDto = new RefreshTokenDto
         {
             Id = Guid.NewGuid(),
             Token = newRefreshToken,
-            UserId = storedToken.UserId,
+            CSRFToken = Guid.NewGuid(),
+            UserId = storedRefreshToken.UserId,
             Expires = DateTime.UtcNow.AddDays(7),
             CurrentState = CurrentStateType.Active
         };
 
         await refreshTokenService.Refresh(newRefreshDto);
 
-        Response.Cookies.Append(RefreshTokenCookieName, newRefreshToken, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = true,
-            Expires = newRefreshDto.Expires
-        });
+        AppendCookies(newRefreshDto);
 
         return Ok(ApiResponse<string>.SuccessResponse(newRefreshToken, "Refresh token issued successfully."));
     }
@@ -553,6 +537,27 @@ public class AuthController<TDbContext>(
 
         var errorResponse = ApiResponse<string>.FailResponse("Registration failed", result.Errors);
         return BadRequest(errorResponse);
+    }
+
+    private void AppendCookies(RefreshTokenDto newRefreshDto)
+    {
+        Response.Cookies.Append(RefreshTokenCookieName, newRefreshDto.Token, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.None,
+            Expires = newRefreshDto.Expires,
+            IsEssential = true
+        });
+
+        Response.Cookies.Append(CSRFTokenCookieName, newRefreshDto.CSRFToken.ToString(), new CookieOptions
+        {
+            HttpOnly = false,
+            Secure = true,
+            SameSite = SameSiteMode.None,
+            Expires = newRefreshDto.Expires,
+            IsEssential = true
+        });
     }
 
 }

@@ -5,6 +5,7 @@ using SharedKernel.Bl.Dtos.User;
 using SharedKernel.Bl.Services.Base;
 using SharedKernel.Da.Contracts;
 using SharedKernel.Domains.Models.RefreshToken;
+using System.Security.Cryptography;
 using static SharedKernel.Domains.Types.CurrentState;
 
 namespace SharedKernel.Bl.Services.Auth;
@@ -49,6 +50,22 @@ public class RefreshTokenService<TDbContext>
         => ToDto(await repoQry.GetFirstOrDefaultAsync(a => a.Token == token)
             ?? throw new Exception($"There is No Token With This {token}"));
 
+    /// <summary>
+    /// Generates a cryptographically secure refresh token.
+    /// </summary>
+    /// <returns>
+    /// A base64-encoded secure random refresh token.
+    /// </returns>
+    public string GenerateRefreshToken()
+    {
+        byte[] randomNumber = new byte[32];
+
+        using (RandomNumberGenerator rng = RandomNumberGenerator.Create())
+            rng.GetBytes(randomNumber);
+
+        return Convert.ToBase64String(randomNumber);
+    }
+
     public override RefreshTokenDto ToDto(TbRefreshToken entity)
     {
         if (entity is null)
@@ -58,6 +75,7 @@ public class RefreshTokenService<TDbContext>
         {
             Id = entity.Id,
             CurrentState = entity.CurrentState,
+            CSRFToken = entity.CSRFToken,
             Token = entity.Token,
             Expires = entity.Expires,
             UserId = entity.CreatedBy
@@ -73,6 +91,7 @@ public class RefreshTokenService<TDbContext>
         {
             Id = dto.Id,
             CurrentState = dto.CurrentState,
+            CSRFToken = dto.CSRFToken,
             Token = dto.Token,
             Expires = dto.Expires,
             CreatedBy = dto.UserId,

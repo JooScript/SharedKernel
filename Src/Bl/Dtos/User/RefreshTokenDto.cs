@@ -21,7 +21,19 @@ public class RefreshTokenDto : SharedKernelBaseDto
     /// <example>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...</example>
     [Required(ErrorMessage = "Refresh token is required.")]
     [StringLength(500, ErrorMessage = "Token cannot exceed 500 characters.")]
-    public string Token { get; set; } = null!;
+    public required string Token { get; set; } = null!;
+
+    /// <summary>
+    /// Gets or sets the csrf token value.
+    /// </summary>
+    /// <value>
+    /// The csrf token as a string. Must be a valid, non-expired token.
+    /// This field is required for token refresh operations.
+    /// </value>
+    /// <example>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...</example>
+    [Required(ErrorMessage = "CSRF token is required.")]
+    [StringLength(500, ErrorMessage = "Token cannot exceed 500 characters.")]
+    public required Guid CSRFToken { get; set; }
 
     /// <summary>
     /// Gets or sets the unique identifier of the user associated with the refresh token.
@@ -32,7 +44,7 @@ public class RefreshTokenDto : SharedKernelBaseDto
     /// </value>
     /// <example>12345678-1234-1234-1234-123456789abc</example>
     [Required(ErrorMessage = "User ID is required.")]
-    public Guid UserId { get; set; }
+    public required Guid UserId { get; set; }
 
     /// <summary>
     /// Gets or sets the expiration date and time of the refresh token.
@@ -46,10 +58,5 @@ public class RefreshTokenDto : SharedKernelBaseDto
     [Required(ErrorMessage = "Expiration date is required.")]
     [DataType(DataType.DateTime, ErrorMessage = "Please enter a valid datetime.")]
     [FutureDate(ErrorMessage = "Expiration date must be in the future.")]
-    public DateTime Expires { get; set; }
+    public required DateTime Expires { get; set; }
 }
-
-
-
-
-

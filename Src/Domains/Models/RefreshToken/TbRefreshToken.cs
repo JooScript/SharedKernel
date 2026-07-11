@@ -2,8 +2,10 @@
 
 public class TbRefreshToken : SharedKernelBaseTable
 {
-    public string Token { get; set; } = null!;
+    public required string Token { get; set; } = null!;
 
-    public DateTime Expires { get; set; }
+    public required Guid CSRFToken { get; set; }
+
+    public required DateTime Expires { get; set; }
 
 }

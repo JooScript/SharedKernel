@@ -13,4 +13,5 @@ public interface IRefreshTokens<TDbContext>
 
     public Task<RefreshTokenDto> GetByToken(string token, CancellationToken cancellationToken = default);
 
+    string GenerateRefreshToken();
 }

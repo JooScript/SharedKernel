@@ -53,27 +53,11 @@ public class TokenService(IOptions<JwtSettings> options) : IToken
             audience: _settings.Audience,
             claims: claims,
             notBefore: DateTime.UtcNow,
-            expires: DateTime.UtcNow.AddMinutes(15),
+            expires: DateTime.UtcNow.AddMinutes(5),
             signingCredentials: credentials);
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    /// <summary>
-    /// Generates a cryptographically secure refresh token.
-    /// </summary>
-    /// <returns>
-    /// A base64-encoded secure random refresh token.
-    /// </returns>
-    public string GenerateRefreshToken()
-    {
-        byte[] randomNumber = new byte[32];
 
-        using (RandomNumberGenerator rng = RandomNumberGenerator.Create())
-        {
-            rng.GetBytes(randomNumber);
-        }
-
-        return Convert.ToBase64String(randomNumber);
-    }
 }
