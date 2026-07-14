@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using SharedKernel.Api.Models;
 using SharedKernel.Bl.Constants;
 using SharedKernel.Bl.Contracts.Auth;
@@ -28,7 +29,8 @@ public class AuthController<TDbContext>(
     IToken tokenService,
     IUserQry userQryService,
     IUserCmd userCmdService,
-    IRefreshTokens<TDbContext> refreshTokenService) :
+    IRefreshTokens<TDbContext> refreshTokenService,
+    ILogger<AuthController<TDbContext>> logger) :
     ControllerBase
     where TDbContext : DbContext
 {
@@ -51,26 +53,34 @@ public class AuthController<TDbContext>(
     [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<ApiResponse<string>>> CreateAdmin([FromBody] CreateUserDto request)
     {
+        logger.LogInformation("CreateAdmin request received for email: {Email}", request?.Email);
+
         if (request == null)
         {
+            logger.LogWarning("CreateAdmin request body is null.");
             return BadRequest(ApiResponse<string>.FailResponse("Request body cannot be null."));
         }
 
         if (!ModelState.IsValid)
         {
-            return BadRequest(ApiResponse<string>.FailResponse(
-                "Validation failed",
-                ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList()));
+            var validationErrors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .ToList();
+            logger.LogWarning("CreateAdmin validation failed for email: {Email}. Errors: {Errors}", request.Email, validationErrors);
+            return BadRequest(ApiResponse<string>.FailResponse("Validation failed", validationErrors));
         }
 
         UserResultDto result = await userCmdService.CreateAdminAsync(request);
 
         if (result.Success)
         {
+            logger.LogInformation("Admin created successfully for email: {Email}", request.Email);
             ApiResponse<string>? response = ApiResponse<string>.SuccessResponse("Please Confirm The Email");
             return Ok(response);
         }
 
+        logger.LogWarning("Admin creation failed for email: {Email}. Errors: {Errors}", request.Email, result.Errors);
         ApiResponse<string>? errorResponse = ApiResponse<string>.FailResponse("Registration failed", result.Errors);
         return BadRequest(errorResponse);
     }
@@ -91,26 +101,34 @@ public class AuthController<TDbContext>(
     [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<ApiResponse<string>>> CreateUser([FromBody] CreateUserDto request)
     {
+        logger.LogInformation("CreateUser request received for email: {Email}", request?.Email);
+
         if (request == null)
         {
+            logger.LogWarning("CreateUser request body is null.");
             return BadRequest(ApiResponse<string>.FailResponse("Request body cannot be null."));
         }
 
         if (!ModelState.IsValid)
         {
-            return BadRequest(ApiResponse<string>.FailResponse(
-                "Validation failed",
-                ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList()));
+            var validationErrors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .ToList();
+            logger.LogWarning("CreateUser validation failed for email: {Email}. Errors: {Errors}", request.Email, validationErrors);
+            return BadRequest(ApiResponse<string>.FailResponse("Validation failed", validationErrors));
         }
 
         UserResultDto result = await userCmdService.CreateUserAsync(request);
 
         if (result.Success)
         {
+            logger.LogInformation("User created successfully for email: {Email}", request.Email);
             ApiResponse<string>? response = ApiResponse<string>.SuccessResponse("Please Confirm The Email");
             return Ok(response);
         }
 
+        logger.LogWarning("User creation failed for email: {Email}. Errors: {Errors}", request.Email, result.Errors);
         ApiResponse<string>? errorResponse = ApiResponse<string>.FailResponse("Registration failed", result.Errors);
         return BadRequest(errorResponse);
     }
@@ -156,6 +174,8 @@ public class AuthController<TDbContext>(
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<ApiResponse<object>>> Login([FromBody] LoginDto request)
     {
+        logger.LogInformation("Login attempt for email: {Email}", request?.Email);
+
         if (!ModelState.IsValid)
         {
             var validationErrors = ModelState.Values
@@ -163,16 +183,21 @@ public class AuthController<TDbContext>(
                 .Select(e => e.ErrorMessage)
                 .ToList();
 
+            logger.LogWarning("Login validation failed for email: {Email}. Errors: {Errors}", request?.Email, validationErrors);
             return BadRequest(ApiResponse<object>.FailResponse("Validation failed", validationErrors));
         }
 
         UserResultDto? userResult = await userCmdService.LoginAsync(request);
 
         if (!userResult.Success)
+        {
+            logger.LogWarning("Login failed for email: {Email}. Errors: {Errors}", request.Email, userResult.Errors);
             return Unauthorized(ApiResponse<object>.FailResponse("Login failed", userResult.Errors));
+        }
 
         if (userResult.Requires2FA)
         {
+            logger.LogInformation("Login requires 2FA for email: {Email}", request.Email);
             return Ok(ApiResponse<object>.FailResponse("2FA required"));
         }
 
@@ -206,6 +231,7 @@ public class AuthController<TDbContext>(
             AccessToken = accessToken
         };
 
+        logger.LogInformation("Login successful for email: {Email}, UserId: {UserId}", request.Email, userData.user.Id);
         return Ok(ApiResponse<object>.SuccessResponse(loginResponse, "Login successful"));
     }
 
@@ -219,11 +245,14 @@ public class AuthController<TDbContext>(
     [HttpPost("logout")]
     public async Task<ActionResult<ApiResponse<bool>>> Logout()
     {
+        logger.LogInformation("Logout requested by user: {UserId}", User.FindFirstValue(ClaimTypes.NameIdentifier));
+
         await userCmdService.LogoutAsync();
 
         Response.Cookies.Delete(RefreshTokenCookieName);
         Response.Cookies.Delete(CSRFTokenCookieName);
 
+        logger.LogInformation("Logout completed for user: {UserId}", User.FindFirstValue(ClaimTypes.NameIdentifier));
         return Ok(ApiResponse<bool>.SuccessResponse(true, "Logged out successfully."));
     }
 
@@ -269,13 +298,17 @@ public class AuthController<TDbContext>(
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<ApiResponse<bool>>> ConfirmEmail([FromQuery] string email, [FromQuery] string token)
     {
+        logger.LogInformation("Email confirmation attempt for email: {Email}", email);
+
         bool result = await userCmdService.ConfirmEmailAsync(email, token);
 
         if (!result)
         {
+            logger.LogWarning("Email confirmation failed for email: {Email}", email);
             return BadRequest(ApiResponse<bool>.FailResponse("Email confirmation failed."));
         }
 
+        logger.LogInformation("Email confirmed successfully for email: {Email}", email);
         return Ok(ApiResponse<bool>.SuccessResponse(true, "Email confirmed successfully."));
     }
 
@@ -318,20 +351,27 @@ public class AuthController<TDbContext>(
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<ApiResponse<bool>>> ForgotPassword(ForgotPasswordDto dto)
     {
+        logger.LogInformation("Forgot password request received for email: {Email}", dto?.Email);
+
         if (!ModelState.IsValid)
         {
-            return BadRequest(ApiResponse<bool>.FailResponse(
-                "Validation failed",
-                ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList()));
+            var validationErrors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .ToList();
+            logger.LogWarning("Forgot password validation failed for email: {Email}. Errors: {Errors}", dto?.Email, validationErrors);
+            return BadRequest(ApiResponse<bool>.FailResponse("Validation failed", validationErrors));
         }
 
         bool sent = await userCmdService.SendPasswordResetTokenAsync(dto.Email);
 
         if (!sent)
         {
+            logger.LogWarning("Failed to send password reset email for email: {Email}", dto.Email);
             return BadRequest(ApiResponse<bool>.FailResponse("Failed to send password reset email."));
         }
 
+        logger.LogInformation("Password reset email sent for email: {Email}", dto.Email);
         return Ok(ApiResponse<bool>.SuccessResponse(true, "Password reset email sent successfully."));
     }
 
@@ -375,17 +415,24 @@ public class AuthController<TDbContext>(
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<ApiResponse<bool>>> ResetPassword(ResetPasswordDto dto)
     {
+        logger.LogInformation("Password reset attempt for email: {Email}", dto?.Email);
+
         if (!ModelState.IsValid)
         {
-            return BadRequest(ApiResponse<bool>.FailResponse(
-                "Validation failed",
-                ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList()));
+            var validationErrors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .ToList();
+            logger.LogWarning("Password reset validation failed for email: {Email}. Errors: {Errors}", dto?.Email, validationErrors);
+            return BadRequest(ApiResponse<bool>.FailResponse("Validation failed", validationErrors));
         }
         bool result = await userCmdService.ResetPasswordAsync(dto);
         if (!result)
         {
+            logger.LogWarning("Password reset failed for email: {Email}", dto.Email);
             return BadRequest(ApiResponse<bool>.FailResponse("Failed to reset password."));
         }
+        logger.LogInformation("Password reset successful for email: {Email}", dto.Email);
         return Ok(ApiResponse<bool>.SuccessResponse(true, "Password reset successfully."));
     }
 
@@ -418,8 +465,11 @@ public class AuthController<TDbContext>(
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> RefreshAccessToken()
     {
+        logger.LogInformation("Refresh access token request received.");
+
         if (!Request.Cookies.TryGetValue(RefreshTokenCookieName, out string? refreshToken))
         {
+            logger.LogWarning("Refresh access token failed: no refresh token cookie found.");
             return Unauthorized(ApiResponse<object>.FailResponse("No refresh token found."));
         }
 
@@ -431,11 +481,15 @@ public class AuthController<TDbContext>(
             storedRefreshToken.CurrentState == CurrentStateType.InActive ||
             storedRefreshToken.CSRFToken.ToString() == storedCsrfToken ||
             storedRefreshToken.Expires < DateTime.UtcNow)
+        {
+            logger.LogWarning("Refresh access token failed: invalid or expired refresh token. UserId: {UserId}", storedRefreshToken?.UserId);
             return Unauthorized(ApiResponse<object>.FailResponse("Invalid or expired refresh token."));
+        }
 
         var claims = await userQryService.GetClaims(storedRefreshToken.UserId);
         var newAccessToken = tokenService.GenerateAccessToken(claims.claims);
 
+        logger.LogInformation("Access token refreshed successfully for UserId: {UserId}", storedRefreshToken.UserId);
         return Ok(ApiResponse<string>.SuccessResponse(newAccessToken, "Access token refreshed successfully."));
     }
 
@@ -468,8 +522,13 @@ public class AuthController<TDbContext>(
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> RefreshRefreshToken()
     {
+        logger.LogInformation("Refresh refresh token request received.");
+
         if (!Request.Cookies.TryGetValue(RefreshTokenCookieName, out string? refreshToken))
+        {
+            logger.LogWarning("Refresh refresh token failed: no refresh token cookie found.");
             return Unauthorized(ApiResponse<object>.FailResponse("No refresh token found."));
+        }
 
         var storedRefreshToken = await refreshTokenService.GetByToken(refreshToken);
 
@@ -479,7 +538,10 @@ public class AuthController<TDbContext>(
             storedRefreshToken.CurrentState == CurrentStateType.InActive ||
             storedRefreshToken.CSRFToken.ToString() == storedCsrfToken ||
             storedRefreshToken.Expires < DateTime.UtcNow)
+        {
+            logger.LogWarning("Refresh refresh token failed: invalid or expired refresh token. UserId: {UserId}", storedRefreshToken?.UserId);
             return Unauthorized(ApiResponse<object>.FailResponse("Invalid or expired refresh token."));
+        }
 
         string? newRefreshToken = refreshTokenService.GenerateRefreshToken();
 
@@ -497,6 +559,7 @@ public class AuthController<TDbContext>(
 
         AppendCookies(newRefreshDto);
 
+        logger.LogInformation("Refresh token rotated successfully for UserId: {UserId}", storedRefreshToken.UserId);
         return Ok(ApiResponse<string>.SuccessResponse(newRefreshToken, "Refresh token issued successfully."));
     }
 
@@ -516,25 +579,33 @@ public class AuthController<TDbContext>(
     [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<ApiResponse<string>>> Register([FromBody] CreateUserDto request)
     {
+        logger.LogInformation("Register request received for email: {Email}", request?.Email);
+
         if (request == null)
         {
+            logger.LogWarning("Register request body is null.");
             return BadRequest(ApiResponse<string>.FailResponse("Request body cannot be null."));
         }
 
         if (!ModelState.IsValid)
         {
-            return BadRequest(ApiResponse<string>.FailResponse(
-                "Validation failed",
-                ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList()));
+            var validationErrors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .ToList();
+            logger.LogWarning("Register validation failed for email: {Email}. Errors: {Errors}", request.Email, validationErrors);
+            return BadRequest(ApiResponse<string>.FailResponse("Validation failed", validationErrors));
         }
         UserResultDto result = await userCmdService.CreateUserAsync(request);
 
         if (result.Success)
         {
+            logger.LogInformation("User registered successfully for email: {Email}", request.Email);
             var response = ApiResponse<string>.SuccessResponse("Please Confirm The Email");
             return Ok(response);
         }
 
+        logger.LogWarning("User registration failed for email: {Email}. Errors: {Errors}", request.Email, result.Errors);
         var errorResponse = ApiResponse<string>.FailResponse("Registration failed", result.Errors);
         return BadRequest(errorResponse);
     }
