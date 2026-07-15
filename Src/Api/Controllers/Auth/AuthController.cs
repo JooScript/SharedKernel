@@ -477,8 +477,6 @@ public class AuthController<TDbContext>(
 
         string? storedCsrfToken = Request.Headers[CSRFTokenHeaderName].FirstOrDefault();
 
-        Console.WriteLine($"storedCsrfToken : {storedCsrfToken}");
-
         if (storedRefreshToken == null ||
             storedRefreshToken.CurrentState == CurrentStateType.InActive ||
             storedRefreshToken.CSRFToken.ToString() != storedCsrfToken ||
