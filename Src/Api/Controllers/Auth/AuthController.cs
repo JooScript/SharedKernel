@@ -477,9 +477,11 @@ public class AuthController<TDbContext>(
 
         string? storedCsrfToken = Request.Headers[CSRFTokenHeaderName].FirstOrDefault();
 
+        Console.WriteLine($"storedCsrfToken : {storedCsrfToken}");
+
         if (storedRefreshToken == null ||
             storedRefreshToken.CurrentState == CurrentStateType.InActive ||
-            storedRefreshToken.CSRFToken.ToString() == storedCsrfToken ||
+            storedRefreshToken.CSRFToken.ToString() != storedCsrfToken ||
             storedRefreshToken.Expires < DateTime.UtcNow)
         {
             logger.LogWarning("Refresh access token failed: invalid or expired refresh token. UserId: {UserId}", storedRefreshToken?.UserId);
@@ -536,7 +538,7 @@ public class AuthController<TDbContext>(
 
         if (storedRefreshToken == null ||
             storedRefreshToken.CurrentState == CurrentStateType.InActive ||
-            storedRefreshToken.CSRFToken.ToString() == storedCsrfToken ||
+            storedRefreshToken.CSRFToken.ToString() != storedCsrfToken ||
             storedRefreshToken.Expires < DateTime.UtcNow)
         {
             logger.LogWarning("Refresh refresh token failed: invalid or expired refresh token. UserId: {UserId}", storedRefreshToken?.UserId);
@@ -560,7 +562,7 @@ public class AuthController<TDbContext>(
         AppendCookies(newRefreshDto);
 
         logger.LogInformation("Refresh token rotated successfully for UserId: {UserId}", storedRefreshToken.UserId);
-        return Ok(ApiResponse<string>.SuccessResponse(newRefreshToken, "Refresh token issued successfully."));
+        return NoContent();
     }
 
     /// <summary>
