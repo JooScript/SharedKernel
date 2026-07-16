@@ -94,8 +94,7 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
 
             if (dbData is null)
             {
-                logger.LogWarning($"There is no {nameof(Tb)} entity with id {entity.Id}");
-
+                logger.LogWarning($"There is no {typeof(Tb).Name} entity with id {entity.Id}");
                 return false;
             }
 
