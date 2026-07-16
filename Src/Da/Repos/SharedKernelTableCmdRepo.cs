@@ -106,9 +106,7 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
             entry.Property(x => x.CreatedAt).IsModified = false;
             entry.Property(x => x.CreatedBy).IsModified = false;
 
-            await context.SaveChangesAsync(cancellationToken);
-
-            return true;
+            return await context.SaveChangesAsync(cancellationToken) > 0;
         }
         catch (DbUpdateConcurrencyException ex)
         {
