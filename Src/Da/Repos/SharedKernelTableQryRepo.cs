@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SharedKernel.Da.Contracts;
 using SharedKernel.Da.Contracts.Models;
@@ -197,9 +198,18 @@ public class SharedKernelTableQryRepo<Tb, TDbContext>(
                 TotalPages = totalPages
             };
         }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (SqlException ex) when (ex.Message.Contains("Operation cancelled by user"))
+        {
+            throw;
+        }
         catch (Exception ex)
         {
-            throw new DataAccessException(ex, $"Failed to get paged list for type {typeof(Tb).Name}");
+            throw new DataAccessException(ex,
+                $"Failed to get paged list for type {typeof(Tb).Name}");
         }
     }
 
