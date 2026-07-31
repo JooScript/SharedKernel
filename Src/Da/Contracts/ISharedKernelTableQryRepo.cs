@@ -42,6 +42,8 @@ public interface ISharedKernelTableQryRepo<Tb, TDbContext>
     Task<bool> IsExistsAsync(Expression<Func<Tb, bool>> filter, CancellationToken cancellationToken = default);
 
     Task<bool> IsExistsAsync(Guid Id, CancellationToken cancellationToken = default);
+
     Task<TResult?> FindAsync<TResult>(Guid id, Expression<Func<Tb, TResult>> selector, CancellationToken cancellationToken = default, params Expression<Func<Tb, object>>[] includes);
+
     Task<Tb?> GetTrackedOrLoadAsync(Guid id, CancellationToken cancellationToken = default);
 }
