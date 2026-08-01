@@ -7,5 +7,4 @@ public interface IToken
 {
     string GenerateAccessToken(IEnumerable<Claim> claims);
 
-
 }
