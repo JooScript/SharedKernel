@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SharedKernel.Bl.Contracts.AuditLog;
 using SharedKernel.Bl.Contracts.Auth;
-using SharedKernel.Bl.Contracts.Events;
 using SharedKernel.Bl.Dtos.AuditLog;
 using SharedKernel.Bl.Services.Base;
 using SharedKernel.Da.Contracts;
@@ -12,9 +11,8 @@ namespace SharedKernel.Bl.Services.AuditLog;
 public class AuditLogService<TDbContext>(
     ISharedKernelTableQryRepo<TbAuditLog, TDbContext> repoQuery,
     ISharedKernelTableCmdRepo<TbAuditLog, TDbContext> repoCommand,
-    IUserQry userServiceQuery,
-    ICrudPublisher publisher)
-    : SharedKernelBaseService<TbAuditLog, AuditLogDto, TDbContext>(repoQuery, repoCommand, userServiceQuery, publisher),
+    IUserQry userServiceQuery)
+    : SharedKernelBaseService<TbAuditLog, AuditLogDto, TDbContext>(repoQuery, repoCommand, userServiceQuery),
     IAuditLog<TDbContext>
     where TDbContext : DbContext
 {
