@@ -21,9 +21,9 @@ public class RefreshTokenService<TDbContext>
     public RefreshTokenService(
     ISharedKernelTableQryRepo<TbRefreshToken, TDbContext> repoQry,
     ISharedKernelTableCmdRepo<TbRefreshToken, TDbContext> repoCmd,
-    IUserQry userServiceQuery,
+    IUserQry userQry,
     ICrudPublisher publisher)
-    : base(repoQry, repoCmd, userServiceQuery, publisher)
+    : base(repoQry, repoCmd, userQry)
     {
         this.repoCmd = repoCmd;
         this.repoQry = repoQry;
