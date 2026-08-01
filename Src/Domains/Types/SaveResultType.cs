@@ -5,6 +5,9 @@ public record SaveResultType(
     Guid Id,
     string? ErrorMessage = null)
 {
+    public static SaveResultType From(bool success, Guid id)
+        => success ? Ok(id) : Fail();
+
     public static SaveResultType Ok(Guid id)
         => new(true, id, null);
 
