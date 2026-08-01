@@ -23,23 +23,20 @@ public abstract class SharedKernelBaseService<Tb, Dto, TDbContext>
     readonly ISharedKernelTableCmdRepo<Tb, TDbContext> _repoCmd;
     readonly IUserQry _userServiceQuery;
     readonly ISharedKernelUnitOfWork<TDbContext>? _UnitOfWork;
-    private readonly ICrudPublisher _publisher;
 
-    public SharedKernelBaseService(ISharedKernelTableQryRepo<Tb, TDbContext> repoQry, ISharedKernelTableCmdRepo<Tb, TDbContext> repoCmd, IUserQry userQry, ICrudPublisher publisher)
+    public SharedKernelBaseService(ISharedKernelTableQryRepo<Tb, TDbContext> repoQry, ISharedKernelTableCmdRepo<Tb, TDbContext> repoCmd, IUserQry userQry)
     {
         _repoQry = repoQry;
         _repoCmd = repoCmd;
         _userServiceQuery = userQry;
-        _publisher = publisher;
     }
 
-    public SharedKernelBaseService(ISharedKernelUnitOfWork<TDbContext> unitOfWork, ISharedKernelTableQryRepo<Tb, TDbContext> repoQry, IUserQry userServiceQry, ICrudPublisher publisher)
+    public SharedKernelBaseService(ISharedKernelUnitOfWork<TDbContext> unitOfWork, ISharedKernelTableQryRepo<Tb, TDbContext> repoQry, IUserQry userQry)
     {
         _UnitOfWork = unitOfWork;
         _repoQry = repoQry;
         _repoCmd = unitOfWork.Repository<Tb>();
-        _userServiceQuery = userServiceQry;
-        _publisher = publisher;
+        _userServiceQuery = userQry;
     }
 
     public abstract Dto ToDto(Tb entity);
