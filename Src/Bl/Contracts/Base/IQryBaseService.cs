@@ -11,7 +11,7 @@ public interface IQryBaseService<Dto> where Dto : class
     /// <summary>
     /// Retrieves a single entity by its unique identifier
     /// </summary>
-    /// <param name="id">The int identifier of the entity</param>
+    /// <param name="id">The Guid identifier of the entity</param>
     /// <returns>Task representing the asynchronous operation with the matching DTO</returns>
     Task<Dto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
