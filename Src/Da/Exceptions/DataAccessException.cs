@@ -9,6 +9,8 @@ namespace SharedKernel.Da.Exceptions;
 /// </summary>
 public class DataAccessException : Exception
 {
+    private readonly ILogger _logger;
+
     /// <summary>
     /// Initializes a new instance of the DataAccessException class.
     /// </summary>
@@ -30,6 +32,22 @@ public class DataAccessException : Exception
         FileHelper.ErrorLogger(customException, true);
     }
 
+    public DataAccessException(ILogger logger, Exception ex, string customMessage = "") : base(customMessage, ex)
+    {
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+        if (ex == null)
+            throw new ArgumentNullException(nameof(ex));
+
+        var methodName = new System.Diagnostics.StackTrace().GetFrame(1)?.GetMethod()?.Name ?? "UnknownMethod";
+
+        customMessage = string.IsNullOrWhiteSpace(customMessage) ? "Api layer exception occurred." : customMessage;
+
+        Exception? customException = new Exception(customMessage, ex);
+
+        _logger.LogError(methodName, customException);
+        FileHelper.ErrorLogger(customException, true);
+    }
 
     public DataAccessException(string customMessage) : base(customMessage)
     {
