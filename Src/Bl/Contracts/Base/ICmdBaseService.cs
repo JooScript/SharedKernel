@@ -29,7 +29,7 @@ public interface ICmdBaseService<Dto> where Dto : class
     /// <summary>
     /// Changes the status of an entity
     /// </summary>
-    /// <param name="id">The int identifier of the entity</param>
+    /// <param name="id">The Guid identifier of the entity</param>
     /// <param name="status">The new status value (default: 1)</param>
     /// <returns>
     /// Task representing the asynchronous operation with a boolean indicating success
