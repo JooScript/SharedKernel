@@ -30,14 +30,13 @@ public class AuthController<TDbContext>(
     IUserQry userQryService,
     IUserCmd userCmdService,
     IRefreshTokens<TDbContext> refreshTokenService,
-    ILogger<AuthController<TDbContext>> logger) :
+    ILogger<AuthController<TDbContext>> logger,
+    string refreshTokenCookieName = "X-REFRESH-TOKEN",
+    string csrfTokenCookieName = "X-CSRF-TOKEN",
+    string csrfTokenHeaderName = "X-CSRF-TOKEN") :
     ControllerBase
     where TDbContext : DbContext
 {
-    string RefreshTokenCookieName => "X-REFRESH-TOKEN";
-    string CSRFTokenCookieName => "X-CSRF-TOKEN";
-    string CSRFTokenHeaderName => "X-CSRF-TOKEN";
-
     /// <summary>
     /// Create a new admin.
     /// </summary>
@@ -249,8 +248,8 @@ public class AuthController<TDbContext>(
 
         await userCmdService.LogoutAsync();
 
-        Response.Cookies.Delete(RefreshTokenCookieName);
-        Response.Cookies.Delete(CSRFTokenCookieName);
+        Response.Cookies.Delete(refreshTokenCookieName);
+        Response.Cookies.Delete(csrfTokenCookieName);
 
         logger.LogInformation("Logout completed for user: {UserId}", User.FindFirstValue(ClaimTypes.NameIdentifier));
         return Ok(ApiResponse<bool>.SuccessResponse(true, "Logged out successfully."));
@@ -467,7 +466,7 @@ public class AuthController<TDbContext>(
     {
         logger.LogInformation("Refresh access token request received.");
 
-        if (!Request.Cookies.TryGetValue(RefreshTokenCookieName, out string? refreshToken))
+        if (!Request.Cookies.TryGetValue(refreshTokenCookieName, out string? refreshToken))
         {
             logger.LogWarning("Refresh access token failed: no refresh token cookie found.");
             return Unauthorized(ApiResponse<object>.FailResponse("No refresh token found."));
@@ -475,7 +474,7 @@ public class AuthController<TDbContext>(
 
         var storedRefreshToken = await refreshTokenService.GetByToken(refreshToken);
 
-        string? storedCsrfToken = Request.Headers[CSRFTokenHeaderName].FirstOrDefault();
+        string? storedCsrfToken = Request.Headers[csrfTokenHeaderName].FirstOrDefault();
 
         if (storedRefreshToken == null ||
             storedRefreshToken.CurrentState == CurrentStateType.InActive ||
@@ -524,7 +523,7 @@ public class AuthController<TDbContext>(
     {
         logger.LogInformation("Refresh refresh token request received.");
 
-        if (!Request.Cookies.TryGetValue(RefreshTokenCookieName, out string? refreshToken))
+        if (!Request.Cookies.TryGetValue(refreshTokenCookieName, out string? refreshToken))
         {
             logger.LogWarning("Refresh refresh token failed: no refresh token cookie found.");
             return Unauthorized(ApiResponse<object>.FailResponse("No refresh token found."));
@@ -532,7 +531,7 @@ public class AuthController<TDbContext>(
 
         var storedRefreshToken = await refreshTokenService.GetByToken(refreshToken);
 
-        string? storedCsrfToken = Request.Headers[CSRFTokenHeaderName].FirstOrDefault();
+        string? storedCsrfToken = Request.Headers[csrfTokenHeaderName].FirstOrDefault();
 
         if (storedRefreshToken == null ||
             storedRefreshToken.CurrentState == CurrentStateType.InActive ||
@@ -612,7 +611,7 @@ public class AuthController<TDbContext>(
 
     private void AppendCookies(RefreshTokenDto newRefreshDto)
     {
-        Response.Cookies.Append(RefreshTokenCookieName, newRefreshDto.Token, new CookieOptions
+        Response.Cookies.Append(refreshTokenCookieName, newRefreshDto.Token, new CookieOptions
         {
             HttpOnly = true,
             Secure = true,
@@ -621,7 +620,7 @@ public class AuthController<TDbContext>(
             IsEssential = true
         });
 
-        Response.Cookies.Append(CSRFTokenCookieName, newRefreshDto.CSRFToken.ToString(), new CookieOptions
+        Response.Cookies.Append(csrfTokenCookieName, newRefreshDto.CSRFToken.ToString(), new CookieOptions
         {
             HttpOnly = false,
             Secure = true,
