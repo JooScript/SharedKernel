@@ -64,12 +64,12 @@ public abstract class SharedKernelBaseService<Tb, Dto, TDbContext>
     public virtual async Task<bool> IsExistsAsync(Guid Id, CancellationToken cancellationToken)
         => await _repoQry.IsExistsAsync(Id, cancellationToken);
 
-    public virtual async Task<EntityValidationResult> CanDeleteAsync(Guid id)
+    public virtual async Task<EntityValidationResult> CanDeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return new(true, string.Empty);
     }
 
-    public virtual async Task<EntityValidationResult> CanUpdateAsync(Dto entity)
+    public virtual async Task<EntityValidationResult> CanUpdateAsync(Dto entity, CancellationToken cancellationToken = default)
     {
         return new(true, string.Empty);
     }

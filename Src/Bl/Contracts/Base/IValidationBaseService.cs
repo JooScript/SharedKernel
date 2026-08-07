@@ -9,7 +9,7 @@ public interface IValidationBaseService<Tb, Dto> where Tb : SharedKernelBaseTabl
 
     Task<bool> IsExistsAsync(Guid Id, CancellationToken cancellationToken = default);
 
-    Task<EntityValidationResult> CanDeleteAsync(Guid id);
+    Task<EntityValidationResult> CanDeleteAsync(Guid id, CancellationToken cancellationToken = default);
 
-    Task<EntityValidationResult> CanUpdateAsync(Dto entity);
+    Task<EntityValidationResult> CanUpdateAsync(Dto entity, CancellationToken cancellationToken = default);
 }
