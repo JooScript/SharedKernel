@@ -46,9 +46,11 @@ public class RefreshTokenService<TDbContext>
         return true;
     }
 
-    public async Task<RefreshTokenDto> GetByToken(string token, CancellationToken cancellationToken = default)
-        => ToDto(await repoQry.GetFirstOrDefaultAsync(a => a.Token == token)
-            ?? throw new Exception($"There is No Token With This {token}"));
+    public async Task<RefreshTokenDto?> GetByToken(string token, CancellationToken cancellationToken = default)
+    {
+        var tokenEntity = await repoQry.GetFirstOrDefaultAsync(a => a.Token == token, cancellationToken);
+        return tokenEntity != null ? ToDto(tokenEntity) : null;
+    }
 
     /// <summary>
     /// Generates a cryptographically secure refresh token.

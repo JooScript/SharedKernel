@@ -11,7 +11,7 @@ public interface IRefreshTokens<TDbContext>
 {
     public Task<bool> Refresh(RefreshTokenDto tokenDto, CancellationToken cancellationToken = default);
 
-    public Task<RefreshTokenDto> GetByToken(string token, CancellationToken cancellationToken = default);
+    public Task<RefreshTokenDto?> GetByToken(string token, CancellationToken cancellationToken = default);
 
     string GenerateRefreshToken();
 }
