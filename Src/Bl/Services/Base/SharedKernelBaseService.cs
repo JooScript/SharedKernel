@@ -1,8 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SharedKernel.Bl.Contracts.Auth;
 using SharedKernel.Bl.Contracts.Base;
-using SharedKernel.Bl.Contracts.Events;
-using SharedKernel.Bl.Events.Args;
 using SharedKernel.Bl.Exceptions;
 using SharedKernel.Bl.Models;
 using SharedKernel.Da.Contracts;
