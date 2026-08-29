@@ -5,6 +5,7 @@ using SharedKernel.Bl.Dtos.AuditLog;
 using SharedKernel.Bl.Services.Base;
 using SharedKernel.Da.Contracts;
 using SharedKernel.Domains.Models.Logging;
+using Utils.General;
 
 namespace SharedKernel.Bl.Services.AuditLog;
 
@@ -34,7 +35,7 @@ public class AuditLogService<TDbContext>(
     {
         return new TbAuditLog
         {
-            Id = dto.Id,
+            Id = dto.Id.EmptyIfNull(),
 
             Action = dto.Action,
             Entity = dto.Entity,

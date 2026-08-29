@@ -6,6 +6,7 @@ using SharedKernel.Bl.Services.Base;
 using SharedKernel.Da.Contracts;
 using SharedKernel.Domains.Models.RefreshToken;
 using System.Security.Cryptography;
+using Utils.General;
 using static SharedKernel.Domains.Types.CurrentState;
 
 namespace SharedKernel.Bl.Services.Auth;
@@ -91,7 +92,7 @@ public class RefreshTokenService<TDbContext>
 
         return new TbRefreshToken
         {
-            Id = dto.Id,
+            Id = dto.Id.EmptyIfNull(),
             CurrentState = dto.CurrentState,
             CSRFToken = dto.CSRFToken,
             Token = dto.Token,
