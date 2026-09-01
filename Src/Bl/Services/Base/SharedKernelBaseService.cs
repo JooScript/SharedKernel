@@ -67,7 +67,7 @@ public abstract class SharedKernelBaseService<Tb, Dto, TDbContext>
         return new(true, string.Empty);
     }
 
-    public virtual async Task<EntityValidationResult> CanUpdateAsync(Dto entity, CancellationToken cancellationToken = default)
+    public virtual async Task<EntityValidationResult> CanUpdateAsync(Dto dto, CancellationToken cancellationToken = default)
     {
         return new(true, string.Empty);
     }
@@ -93,14 +93,14 @@ public abstract class SharedKernelBaseService<Tb, Dto, TDbContext>
         }
     }
 
-    public async virtual Task<bool> UpdateAsync(Dto entity, CancellationToken cancellationToken = default)
+    public async virtual Task<bool> UpdateAsync(Dto dto, CancellationToken cancellationToken = default)
     {
-        var check = await CanUpdateAsync(entity);
+        var check = await CanUpdateAsync(dto);
 
         if (!check.Success)
             return false;
 
-        return await _repoCmd.UpdateAsync(BlHelper.NormalizeDbObjToUpdate(ToEntity(entity), _userServiceQuery.GetLoggedInUserId()));
+        return await _repoCmd.UpdateAsync(BlHelper.NormalizeDbObjToUpdate(ToEntity(dto), _userServiceQuery.GetLoggedInUserId()));
     }
 
     public virtual async Task<bool> ChangeStatusAsync(Guid id, CurrentStateType status = CurrentStateType.Active, CancellationToken cancellationToken = default)

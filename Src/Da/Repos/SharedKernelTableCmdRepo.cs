@@ -1,5 +1,4 @@
-﻿using LibGit2Sharp;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SharedKernel.Da.Contracts;
 using SharedKernel.Da.Exceptions;
