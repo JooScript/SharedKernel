@@ -83,7 +83,7 @@ public abstract class SharedKernelBaseService<Tb, Dto, TDbContext>
             if (dbObject is null)
                 throw new Exception("The Database Object Cannot be null");
 
-            var result = await repoCmd.AddAsync(BlHelper.NormalizeDbObjToAdd(dbObject, userQry.GetLoggedInUserId()));
+            var result = await repoCmd.AddAsync(BlHelper.NormalizeDbObjToAdd(dbObject, userQry.LoggedInUserId));
 
             return result;
         }
@@ -100,7 +100,7 @@ public abstract class SharedKernelBaseService<Tb, Dto, TDbContext>
         if (!check.Success)
             return false;
 
-        return await repoCmd.UpdateAsync(BlHelper.NormalizeDbObjToUpdate(ToEntity(dto), userQry.GetLoggedInUserId()));
+        return await repoCmd.UpdateAsync(BlHelper.NormalizeDbObjToUpdate(ToEntity(dto), userQry.LoggedInUserId));
     }
 
     public virtual async Task<bool> ChangeStatusAsync(Guid id, CurrentStateType status = CurrentStateType.Active, CancellationToken cancellationToken = default)
@@ -112,7 +112,7 @@ public abstract class SharedKernelBaseService<Tb, Dto, TDbContext>
         CurrentStateType previousState = entity.CurrentState;
 
         entity.CurrentState = status;
-        Guid userId = userQry.GetLoggedInUserId();
+        Guid userId = userQry.LoggedInUserId;
         entity.UpdatedBy = userId;
 
         bool success = await repoCmd.UpdateAsync(entity);
