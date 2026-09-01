@@ -17,24 +17,24 @@ public abstract class SharedKernelBaseService<Tb, Dto, TDbContext>
     where Dto : class
     where TDbContext : DbContext
 {
-    readonly ISharedKernelTableQryRepo<Tb, TDbContext> _repoQry;
-    readonly ISharedKernelTableCmdRepo<Tb, TDbContext> _repoCmd;
-    readonly IUserQry _userServiceQuery;
+    readonly ISharedKernelTableQryRepo<Tb, TDbContext> repoQry;
+    readonly ISharedKernelTableCmdRepo<Tb, TDbContext> repoCmd;
+    readonly IUserQry userQry;
     readonly ISharedKernelUnitOfWork<TDbContext>? _UnitOfWork;
 
     public SharedKernelBaseService(ISharedKernelTableQryRepo<Tb, TDbContext> repoQry, ISharedKernelTableCmdRepo<Tb, TDbContext> repoCmd, IUserQry userQry)
     {
-        _repoQry = repoQry;
-        _repoCmd = repoCmd;
-        _userServiceQuery = userQry;
+        this.repoQry = repoQry;
+        this.repoCmd = repoCmd;
+        this.userQry = userQry;
     }
 
     public SharedKernelBaseService(ISharedKernelUnitOfWork<TDbContext> unitOfWork, ISharedKernelTableQryRepo<Tb, TDbContext> repoQry, IUserQry userQry)
     {
         _UnitOfWork = unitOfWork;
-        _repoQry = repoQry;
-        _repoCmd = unitOfWork.Repository<Tb>();
-        _userServiceQuery = userQry;
+        this.repoQry = repoQry;
+        repoCmd = unitOfWork.Repository<Tb>();
+        this.userQry = userQry;
     }
 
     public abstract Dto ToDto(Tb entity);
@@ -43,24 +43,24 @@ public abstract class SharedKernelBaseService<Tb, Dto, TDbContext>
 
     public virtual async Task<List<Dto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var entities = await _repoQry.GetAllAsync(cancellationToken);
+        var entities = await repoQry.GetAllAsync(cancellationToken);
         return entities.Select(ToDto).ToList();
     }
 
     public virtual async Task<Dto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var entity = await _repoQry.FindAsync(id);
+        var entity = await repoQry.FindAsync(id);
         return entity == null ? null : ToDto(entity);
     }
 
     public virtual async Task<int> CountAsync(CancellationToken cancellationToken)
-        => await _repoQry.CountAsync(e => e.CurrentState > 0, cancellationToken);
+        => await repoQry.CountAsync(e => e.CurrentState > 0, cancellationToken);
 
     public virtual async Task<bool> IsExistsAsync(Expression<Func<Tb, bool>> filter, CancellationToken cancellationToken = default)
-        => await _repoQry.IsExistsAsync(filter, cancellationToken);
+        => await repoQry.IsExistsAsync(filter, cancellationToken);
 
     public virtual async Task<bool> IsExistsAsync(Guid Id, CancellationToken cancellationToken)
-        => await _repoQry.IsExistsAsync(Id, cancellationToken);
+        => await repoQry.IsExistsAsync(Id, cancellationToken);
 
     public virtual async Task<EntityValidationResult> CanDeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
@@ -83,7 +83,7 @@ public abstract class SharedKernelBaseService<Tb, Dto, TDbContext>
             if (dbObject is null)
                 throw new Exception("The Database Object Cannot be null");
 
-            var result = await _repoCmd.AddAsync(BlHelper.NormalizeDbObjToAdd(dbObject, _userServiceQuery.GetLoggedInUserId()));
+            var result = await repoCmd.AddAsync(BlHelper.NormalizeDbObjToAdd(dbObject, userQry.GetLoggedInUserId()));
 
             return result;
         }
@@ -100,22 +100,22 @@ public abstract class SharedKernelBaseService<Tb, Dto, TDbContext>
         if (!check.Success)
             return false;
 
-        return await _repoCmd.UpdateAsync(BlHelper.NormalizeDbObjToUpdate(ToEntity(dto), _userServiceQuery.GetLoggedInUserId()));
+        return await repoCmd.UpdateAsync(BlHelper.NormalizeDbObjToUpdate(ToEntity(dto), userQry.GetLoggedInUserId()));
     }
 
     public virtual async Task<bool> ChangeStatusAsync(Guid id, CurrentStateType status = CurrentStateType.Active, CancellationToken cancellationToken = default)
     {
-        Tb? entity = await _repoQry.FindAsync(id);
+        Tb? entity = await repoQry.FindAsync(id);
 
         if (entity == null) return false;
 
         CurrentStateType previousState = entity.CurrentState;
 
         entity.CurrentState = status;
-        Guid userId = _userServiceQuery.GetLoggedInUserId();
+        Guid userId = userQry.GetLoggedInUserId();
         entity.UpdatedBy = userId;
 
-        bool success = await _repoCmd.UpdateAsync(entity);
+        bool success = await repoCmd.UpdateAsync(entity);
 
         return success;
     }
@@ -139,7 +139,7 @@ public abstract class SharedKernelBaseService<Tb, Dto, TDbContext>
         }
         else
         {
-            return await _repoCmd.HardDeleteAsync(id);
+            return await repoCmd.HardDeleteAsync(id);
         }
     }
 
