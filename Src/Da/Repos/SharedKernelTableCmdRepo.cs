@@ -33,7 +33,7 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
             entity.CreatedAt = DateTime.UtcNow;
             await tbDbSet.AddAsync(entity, cancellationToken);
             await context.SaveChangesAsync(cancellationToken);
-            return new(true, entity.Id);
+            return SaveResultType.Ok(entity.Id);
         }
         catch (Exception ex)
         {
