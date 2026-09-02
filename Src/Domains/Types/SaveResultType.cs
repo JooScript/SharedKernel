@@ -1,16 +1,37 @@
 ﻿namespace SharedKernel.Domains.Types;
 
+public record SaveResultType<TError>(
+    bool Success,
+    Guid Id,
+    IReadOnlyList<TError> Errors)
+{
+    public static SaveResultType<TError> From(
+        bool success,
+        Guid id,
+        params TError[] errors)
+        => success ? Ok(id) : Fail(errors);
+    public static SaveResultType<TError> Ok(Guid id)
+        => new(true, id, []);
+
+    public static SaveResultType<TError> Fail(params TError[] errors)
+        => new(false, Guid.Empty, errors);
+}
+
 public record SaveResultType(
     bool Success,
     Guid Id,
-    string? ErrorMessage = null)
+    IReadOnlyList<string> Errors)
+    : SaveResultType<string>(Success, Id, Errors)
 {
-    public static SaveResultType From(bool success, Guid id)
-        => success ? Ok(id) : Fail();
+    public new static SaveResultType From(
+        bool success,
+        Guid id,
+        params string[] errors)
+        => success ? Ok(id) : Fail(errors);
 
-    public static SaveResultType Ok(Guid id)
-        => new(true, id, null);
+    public new static SaveResultType Ok(Guid id)
+        => new(true, id, []);
 
-    public static SaveResultType Fail(string? errorMessage = null)
-        => new(false, Guid.Empty, errorMessage);
+    public new static SaveResultType Fail(params string[] errors)
+        => new(false, Guid.Empty, errors);
 }
