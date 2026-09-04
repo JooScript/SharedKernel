@@ -12,6 +12,4 @@ public interface IBaseService<Tb, Dto>
     IValidationBaseService<Tb, Dto>
     where Tb : SharedKernelBaseTable
     where Dto : class
-{
-
-}
+{ }
