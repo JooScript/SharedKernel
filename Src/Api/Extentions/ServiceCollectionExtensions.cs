@@ -16,7 +16,7 @@ namespace SharedKernel.Api.Extentions;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddSharedKernelApi(this IServiceCollection services)
+    public static IServiceCollection AddSharedKernel(this IServiceCollection services)
     {
         services.AddMemoryCache();
 
