@@ -425,12 +425,13 @@ public class AuthController<TDbContext>(
             logger.LogWarning("Password reset validation failed for email: {Email}. Errors: {Errors}", dto?.Email, validationErrors);
             return BadRequest(ApiResponse<bool>.FailResponse("Validation failed", validationErrors));
         }
-        bool result = await userCmdService.ResetPasswordAsync(dto);
-        if (!result)
+
+        if (!(dto is not null && await userCmdService.ResetPasswordAsync(dto)))
         {
             logger.LogWarning("Password reset failed for email: {Email}", dto.Email);
             return BadRequest(ApiResponse<bool>.FailResponse("Failed to reset password."));
         }
+
         logger.LogInformation("Password reset successful for email: {Email}", dto.Email);
         return Ok(ApiResponse<bool>.SuccessResponse(true, "Password reset successfully."));
     }
