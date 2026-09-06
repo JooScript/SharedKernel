@@ -175,7 +175,7 @@ public class AuthController<TDbContext>(
     {
         logger.LogInformation("Login attempt for email: {Email}", request?.Email);
 
-        if (!ModelState.IsValid)
+        if (!ModelState.IsValid || request is null)
         {
             var validationErrors = ModelState.Values
                 .SelectMany(v => v.Errors)
@@ -350,7 +350,13 @@ public class AuthController<TDbContext>(
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<ApiResponse<bool>>> ForgotPassword(ForgotPasswordDto dto)
     {
-        logger.LogInformation("Forgot password request received for email: {Email}", dto?.Email);
+        if (dto is null)
+        {
+            logger.LogWarning("Forgot password request received with null data.");
+            return BadRequest(ApiResponse<bool>.FailResponse("Invalid request data."));
+        }
+
+        logger.LogInformation("Forgot password request received for email: {Email}", dto.Email);
 
         if (!ModelState.IsValid)
         {
@@ -428,7 +434,7 @@ public class AuthController<TDbContext>(
 
         if (!(dto is not null && await userCmdService.ResetPasswordAsync(dto)))
         {
-            logger.LogWarning("Password reset failed for email: {Email}", dto.Email);
+            logger.LogWarning("Password reset failed for email: {Email}", dto?.Email);
             return BadRequest(ApiResponse<bool>.FailResponse("Failed to reset password."));
         }
 
