@@ -1,4 +1,3 @@
-using System;
 using Microsoft.Extensions.Logging;
 using Utils.FileActions;
 
@@ -9,7 +8,7 @@ namespace SharedKernel.Da.Exceptions;
 /// </summary>
 public class DataAccessException : Exception
 {
-    private readonly ILogger _logger;
+
 
     /// <summary>
     /// Initializes a new instance of the DataAccessException class.
@@ -34,8 +33,6 @@ public class DataAccessException : Exception
 
     public DataAccessException(ILogger logger, Exception ex, string customMessage = "") : base(customMessage, ex)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
         if (ex == null)
             throw new ArgumentNullException(nameof(ex));
 
@@ -45,7 +42,7 @@ public class DataAccessException : Exception
 
         Exception? customException = new Exception(customMessage, ex);
 
-        _logger.LogError(methodName, customException);
+        logger.LogError(methodName, customException);
         FileHelper.ErrorLogger(customException, true);
     }
 
