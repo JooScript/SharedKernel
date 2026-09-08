@@ -10,10 +10,10 @@ using Utils.General;
 namespace SharedKernel.Bl.Services.AuditLog;
 
 public class AuditLogService<TDbContext>(
-    ISharedKernelTableQryRepo<TbAuditLog, TDbContext> repoQuery,
-    ISharedKernelTableCmdRepo<TbAuditLog, TDbContext> repoCommand,
-    IUserQry userServiceQuery)
-    : SharedKernelBaseService<TbAuditLog, AuditLogDto, TDbContext>(repoQuery, repoCommand, userServiceQuery),
+    ISharedKernelTableQryRepo<TbAuditLog, TDbContext> repoQry,
+    ISharedKernelTableCmdRepo<TbAuditLog, TDbContext> repoCmd,
+    IUserQry userQry)
+    : SharedKernelBaseService<TbAuditLog, AuditLogDto, TDbContext>(repoCmd, repoQry, userQry),
     IAuditLog<TDbContext>
     where TDbContext : DbContext
 {
