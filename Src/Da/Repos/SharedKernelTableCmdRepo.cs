@@ -32,8 +32,8 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
             entity.Id = Guid.Empty;
             entity.CreatedAt = DateTime.UtcNow;
             await tbDbSet.AddAsync(entity, cancellationToken);
-            await context.SaveChangesAsync(cancellationToken);
-            return SaveResultType.Ok(entity.Id);
+
+            return SaveResultType.From(await context.SaveChangesAsync(cancellationToken) > 0, entity.Id);
         }
         catch (Exception ex)
         {
@@ -66,9 +66,8 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
             }
 
             await tbDbSet.AddRangeAsync(entityList, cancellationToken);
-            await context.SaveChangesAsync(cancellationToken);
 
-            return true;
+            return await context.SaveChangesAsync(cancellationToken) > 0;
         }
         catch (Exception ex)
         {
