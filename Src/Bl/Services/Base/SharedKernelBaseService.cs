@@ -19,21 +19,12 @@ public abstract class SharedKernelBaseService<Tb, Dto, TDbContext>
 {
     readonly ISharedKernelTableQryRepo<Tb, TDbContext> repoQry;
     readonly ISharedKernelTableCmdRepo<Tb, TDbContext> repoCmd;
-    readonly ISharedKernelUnitOfWork<TDbContext>? unitOfWork;
     readonly IUserQry userQry;
 
     public SharedKernelBaseService(ISharedKernelTableCmdRepo<Tb, TDbContext> repoCmd, ISharedKernelTableQryRepo<Tb, TDbContext> repoQry, IUserQry userQry)
     {
         this.repoQry = repoQry;
         this.repoCmd = repoCmd;
-        this.userQry = userQry;
-    }
-
-    public SharedKernelBaseService(ISharedKernelUnitOfWork<TDbContext> unitOfWork, ISharedKernelTableQryRepo<Tb, TDbContext> repoQry, IUserQry userQry)
-    {
-        this.unitOfWork = unitOfWork;
-        this.repoQry = repoQry;
-        repoCmd = unitOfWork.Repository<Tb>();
         this.userQry = userQry;
     }
 
