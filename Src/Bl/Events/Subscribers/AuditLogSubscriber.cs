@@ -3,6 +3,7 @@ using SharedKernel.Bl.Contracts.AuditLog;
 using SharedKernel.Bl.Contracts.Events;
 using SharedKernel.Bl.Dtos.AuditLog;
 using SharedKernel.Bl.Events.Args;
+using static SharedKernel.Domains.Types.CurrentState;
 
 namespace SharedKernel.Bl.Events.Subscribers;
 
@@ -43,6 +44,7 @@ public class AuditLogSubscriber<TDbContext>(IAuditLog<TDbContext> auditLog)
             Action = args.Operation.ToString(),
             EntityId = args.Entity.Id,
             Entity = entityName,
+            CurrentState = CurrentStateType.Active,
             Details = details
         };
 
