@@ -4,8 +4,8 @@ namespace SharedKernel.Bl.Dtos.Base;
 
 public abstract class SharedKernelBaseDto
 {
-    public Guid? Id { get; set; }
+    public required Guid? Id { get; set; }
 
-    public CurrentStateType CurrentState { get; set; } = CurrentStateType.Active;
+    public required CurrentStateType CurrentState { get; set; } = CurrentStateType.Active;
 
 }
