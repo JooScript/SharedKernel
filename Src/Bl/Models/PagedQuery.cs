@@ -1,6 +1,4 @@
-﻿using LibGit2Sharp;
-using System.ComponentModel.DataAnnotations;
-using System.Drawing.Printing;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace SharedKernel.Bl.Models;
 
