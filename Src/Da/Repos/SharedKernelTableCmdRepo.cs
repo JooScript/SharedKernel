@@ -144,7 +144,7 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
 
             if (idsToFetch.Any())
             {
-                var dbEntities = await repoQry.FindAsync(idsToFetch, cancellationToken);
+                var dbEntities = await repoQry.GetByIdsAsync(idsToFetch, cancellationToken);
 
                 foreach (var dbEntity in dbEntities)
                 {
@@ -260,7 +260,7 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
     {
         try
         {
-            var entity = await repoQry.FindAsync(id, cancellationToken);
+            var entity = await repoQry.GetByIdAsync(id, cancellationToken);
 
             if (entity == null)
                 return false;

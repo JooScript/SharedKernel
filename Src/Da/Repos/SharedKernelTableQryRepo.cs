@@ -33,7 +33,7 @@ public class SharedKernelTableQryRepo<Tb, TDbContext>(
         }
     }
 
-    public virtual async Task<Tb?> FindAsync(Guid id, CancellationToken cancellationToken = default)
+    public virtual async Task<Tb?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -45,7 +45,7 @@ public class SharedKernelTableQryRepo<Tb, TDbContext>(
         }
     }
 
-    public virtual async Task<TResult?> FindAsync<TResult>(
+    public virtual async Task<TResult?> GetByIdAsync<TResult>(
     Guid id,
     Expression<Func<Tb, TResult>> selector,
     CancellationToken cancellationToken = default,
@@ -71,7 +71,7 @@ public class SharedKernelTableQryRepo<Tb, TDbContext>(
         }
     }
 
-    public virtual async Task<IEnumerable<Tb>> FindAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
+    public virtual async Task<IEnumerable<Tb>> GetByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
     {
         if (ids == null)
         {
@@ -213,7 +213,7 @@ public class SharedKernelTableQryRepo<Tb, TDbContext>(
         }
     }
 
-    public virtual async Task<List<TResult>> GetListAsync<TResult>(Expression<Func<Tb, bool>>? filter = null, Expression<Func<Tb, TResult>>? selector = null, Expression<Func<Tb, object>>? orderBy = null, bool isDescending = false, CancellationToken cancellationToken = default, params Expression<Func<Tb, object>>[] includes)
+    public virtual async Task<IEnumerable<TResult>> GetListAsync<TResult>(Expression<Func<Tb, bool>>? filter = null, Expression<Func<Tb, TResult>>? selector = null, Expression<Func<Tb, object>>? orderBy = null, bool isDescending = false, CancellationToken cancellationToken = default, params Expression<Func<Tb, object>>[] includes)
     {
         try
         {
@@ -245,7 +245,7 @@ public class SharedKernelTableQryRepo<Tb, TDbContext>(
         }
     }
 
-    public virtual async Task<List<Tb>> GetAllAsync(CancellationToken cancellationToken = default)
+    public virtual async Task<IEnumerable<Tb>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         try
         {

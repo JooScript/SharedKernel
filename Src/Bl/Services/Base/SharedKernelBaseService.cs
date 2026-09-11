@@ -40,7 +40,7 @@ public abstract class SharedKernelBaseService<Tb, Dto, TDbContext>
 
     public virtual async Task<Dto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var entity = await repoQry.FindAsync(id);
+        var entity = await repoQry.GetByIdAsync(id);
         return entity == null ? null : ToDto(entity);
     }
 
@@ -96,7 +96,7 @@ public abstract class SharedKernelBaseService<Tb, Dto, TDbContext>
 
     public virtual async Task<bool> ChangeStatusAsync(Guid id, CurrentStateType status = CurrentStateType.Active, CancellationToken cancellationToken = default)
     {
-        Tb? entity = await repoQry.FindAsync(id);
+        Tb? entity = await repoQry.GetByIdAsync(id);
 
         if (entity == null) return false;
 
