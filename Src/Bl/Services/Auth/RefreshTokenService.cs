@@ -32,7 +32,7 @@ public class RefreshTokenService<TDbContext>
 
     public async Task<bool> Refresh(RefreshTokenDto tokenDto, CancellationToken cancellationToken = default)
     {
-        List<TbRefreshToken>? tokenList = await repoQry.GetListAsync(a => a.CreatedBy == tokenDto.UserId && a.CurrentState == CurrentStateType.Active, cancellationToken);
+        var tokenList = await repoQry.FindAsync(a => a.CreatedBy == tokenDto.UserId && a.CurrentState == CurrentStateType.Active, cancellationToken);
 
         foreach (TbRefreshToken dbToken in tokenList)
         {

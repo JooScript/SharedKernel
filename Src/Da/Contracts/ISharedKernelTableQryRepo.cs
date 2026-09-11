@@ -18,9 +18,8 @@ public interface ISharedKernelTableQryRepo<Tb, TDbContext>
 
     Task<Tb?> GetFirstOrDefaultAsync(Expression<Func<Tb, bool>> filter, CancellationToken cancellationToken = default);
 
-    Task<List<Tb>> GetListAsync(Expression<Func<Tb, bool>> filter, CancellationToken cancellationToken = default);
-
-    Task<List<TResult>> GetListAsync<TResult>(Expression<Func<Tb, bool>>? filter = null,
+    Task<List<TResult>> GetListAsync<TResult>(
+        Expression<Func<Tb, bool>>? filter = null,
         Expression<Func<Tb, TResult>>? selector = null,
         Expression<Func<Tb, object>>? orderBy = null,
         bool isDescending = false,

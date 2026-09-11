@@ -94,17 +94,17 @@ public class SharedKernelTableQryRepo<Tb, TDbContext>(
         }
     }
 
-    public virtual async Task<IEnumerable<Tb>> FindAsync(Expression<Func<Tb, bool>> predicate, CancellationToken cancellationToken = default)
+    public virtual async Task<IEnumerable<Tb>> FindAsync(Expression<Func<Tb, bool>> filter, CancellationToken cancellationToken = default)
     {
-        if (predicate == null)
+        if (filter == null)
         {
             logger.LogWarning($"Predicate cannot be null in {nameof(FindAsync)}");
-            throw new ArgumentNullException(nameof(predicate));
+            throw new ArgumentNullException(nameof(filter));
         }
 
         try
         {
-            return await tbDbSet.Where(predicate).AsNoTracking().ToListAsync(cancellationToken);
+            return await tbDbSet.Where(filter).AsNoTracking().ToListAsync(cancellationToken);
         }
         catch (Exception ex)
         {
@@ -210,18 +210,6 @@ public class SharedKernelTableQryRepo<Tb, TDbContext>(
         {
             throw new DataAccessException(ex,
                 $"Failed to get paged list for type {typeof(Tb).Name}");
-        }
-    }
-
-    public virtual async Task<List<Tb>> GetListAsync(Expression<Func<Tb, bool>> filter, CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            return await tbDbSet.Where(filter).AsNoTracking().ToListAsync(cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            throw new DataAccessException(ex, $"Failed to get filtered list for type {typeof(Tb).Name}");
         }
     }
 
