@@ -17,7 +17,9 @@ public class SharedKernelTableQryRepo<Tb, TDbContext>(
 {
     protected readonly DbSet<Tb> tbDbSet = (context ?? throw new ArgumentNullException(nameof(context))).Set<Tb>();
 
-    public async Task<Tb?> GetTrackedOrLoadAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<Tb?> GetTrackedOrLoadAsync(
+        Guid id,
+        CancellationToken cancellationToken = default)
     {
         try
         {
@@ -33,7 +35,9 @@ public class SharedKernelTableQryRepo<Tb, TDbContext>(
         }
     }
 
-    public virtual async Task<Tb?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public virtual async Task<Tb?> GetByIdAsync(
+        Guid id,
+        CancellationToken cancellationToken = default)
     {
         try
         {
@@ -71,7 +75,9 @@ public class SharedKernelTableQryRepo<Tb, TDbContext>(
         }
     }
 
-    public virtual async Task<IEnumerable<Tb>> GetByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
+    public virtual async Task<IEnumerable<Tb>> GetByIdsAsync(
+        IEnumerable<Guid> ids,
+        CancellationToken cancellationToken = default)
     {
         if (ids == null)
         {
@@ -94,7 +100,9 @@ public class SharedKernelTableQryRepo<Tb, TDbContext>(
         }
     }
 
-    public virtual async Task<IEnumerable<Tb>> FindAsync(Expression<Func<Tb, bool>> filter, CancellationToken cancellationToken = default)
+    public virtual async Task<IEnumerable<Tb>> FindAsync(
+        Expression<Func<Tb, bool>> filter,
+        CancellationToken cancellationToken = default)
     {
         if (filter == null)
         {
@@ -213,7 +221,13 @@ public class SharedKernelTableQryRepo<Tb, TDbContext>(
         }
     }
 
-    public virtual async Task<IEnumerable<TResult>> GetListAsync<TResult>(Expression<Func<Tb, bool>>? filter = null, Expression<Func<Tb, TResult>>? selector = null, Expression<Func<Tb, object>>? orderBy = null, bool isDescending = false, CancellationToken cancellationToken = default, params Expression<Func<Tb, object>>[] includes)
+    public virtual async Task<IEnumerable<TResult>> GetListAsync<TResult>(
+        Expression<Func<Tb, bool>>? filter = null,
+        Expression<Func<Tb, TResult>>? selector = null,
+        Expression<Func<Tb, object>>? orderBy = null,
+        bool isDescending = false,
+        CancellationToken cancellationToken = default,
+        params Expression<Func<Tb, object>>[] includes)
     {
         try
         {
@@ -257,7 +271,9 @@ public class SharedKernelTableQryRepo<Tb, TDbContext>(
         }
     }
 
-    public virtual async Task<Tb?> GetFirstOrDefaultAsync(Expression<Func<Tb, bool>> filter, CancellationToken cancellationToken = default)
+    public virtual async Task<Tb?> GetFirstOrDefaultAsync(
+        Expression<Func<Tb, bool>> filter,
+        CancellationToken cancellationToken = default)
     {
         try
         {
@@ -269,7 +285,9 @@ public class SharedKernelTableQryRepo<Tb, TDbContext>(
         }
     }
 
-    public virtual async Task<int> CountAsync(Expression<Func<Tb, bool>>? filter = null, CancellationToken cancellationToken = default)
+    public virtual async Task<int> CountAsync(
+        Expression<Func<Tb, bool>>? filter = null,
+        CancellationToken cancellationToken = default)
     {
         try
         {
@@ -286,7 +304,9 @@ public class SharedKernelTableQryRepo<Tb, TDbContext>(
         }
     }
 
-    public virtual async Task<bool> IsExistsAsync(Expression<Func<Tb, bool>> filter, CancellationToken cancellationToken = default)
+    public virtual async Task<bool> IsExistsAsync(
+        Expression<Func<Tb, bool>> filter,
+        CancellationToken cancellationToken = default)
     {
         try
         {
@@ -298,6 +318,9 @@ public class SharedKernelTableQryRepo<Tb, TDbContext>(
         }
     }
 
-    public virtual async Task<bool> IsExistsAsync(Guid Id, CancellationToken cancellationToken = default) => await IsExistsAsync(x => x.Id == Id, cancellationToken);
+    public virtual async Task<bool> IsExistsAsync(
+        Guid Id,
+        CancellationToken cancellationToken = default)
+        => await IsExistsAsync(x => x.Id == Id, cancellationToken);
 
 }
