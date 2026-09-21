@@ -2,9 +2,9 @@
 
 public abstract class SharedKernelBaseTable
 {
-    public required Guid Id { get; set; }
+    public Guid Id { get; set; } = default!;
 
-    public required CurrentStateType CurrentState { get; set; }
+    public CurrentStateType CurrentState { get; set; } = CurrentStateType.Active;
 
     public DateTimeOffset CreatedAt { get; set; }
 
