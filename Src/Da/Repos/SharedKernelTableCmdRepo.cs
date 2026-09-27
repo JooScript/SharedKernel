@@ -1,8 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Octokit;
 using SharedKernel.Da.Contracts;
 using SharedKernel.Da.Exceptions;
 using SharedKernel.Domains.Types;
+using static QRCoder.PayloadGenerator.SwissQrCode;
 using static SharedKernel.Domains.Types.CurrentState;
 
 namespace SharedKernel.Da.Repos;
@@ -10,14 +12,14 @@ namespace SharedKernel.Da.Repos;
 public class SharedKernelTableCmdRepo<Tb, TDbContext>(
     TDbContext context,
     ILogger<SharedKernelTableCmdRepo<Tb, TDbContext>> logger,
-    ISharedKernelTableQryRepo<Tb, TDbContext> repoQry)
+    ISharedKernelTableQryRepo<Tb, TDbContext> qryRepo)
     : ISharedKernelTableCmdRepo<Tb, TDbContext>
     where Tb : SharedKernelBaseTable
     where TDbContext : DbContext
 {
     protected readonly DbSet<Tb> tbDbSet = (context ?? throw new ArgumentNullException(nameof(context))).Set<Tb>();
 
-    public virtual async Task<SaveResultType> AddAsync(Tb entity, CancellationToken cancellationToken = default)
+    public virtual async Task<SaveResultType> AddAsync(Tb entity, CancellationToken cancellationToken)
     {
         const string methodName = nameof(AddAsync);
 
@@ -40,8 +42,7 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
             throw new DataAccessException(ex, $"Failed to add entity of type {typeof(Tb).Name}");
         }
     }
-
-    public virtual async Task<bool> AddAsync(IEnumerable<Tb> entities, CancellationToken cancellationToken = default)
+    public virtual async Task<bool> AddAsync(IEnumerable<Tb> entities, CancellationToken cancellationToken)
     {
         const string methodName = nameof(AddAsync);
 
@@ -75,7 +76,7 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
         }
     }
 
-    public virtual async Task<bool> UpdateAsync(Tb entity, CancellationToken cancellationToken = default)
+    public virtual async Task<bool> UpdateAsync(Tb entity, CancellationToken cancellationToken)
     {
         const string methodName = nameof(UpdateAsync);
         string _loggerMsg = $"Warning in {methodName} In Table Cmd Repo of {typeof(Tb)}";
@@ -88,7 +89,7 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
 
         try
         {
-            var dbData = await repoQry.GetTrackedOrLoadAsync(entity.Id, cancellationToken);
+            var dbData = await qryRepo.GetTrackedOrLoadAsync(entity.Id, cancellationToken);
 
             if (dbData is null)
             {
@@ -115,8 +116,7 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
             throw new DataAccessException(ex, $"Failed to update entity {entity.Id} of type {typeof(Tb).Name}");
         }
     }
-
-    public virtual async Task<bool> UpdateAsync(IEnumerable<Tb> entities, CancellationToken cancellationToken = default)
+    public virtual async Task<bool> UpdateAsync(IEnumerable<Tb> entities, CancellationToken cancellationToken)
     {
         const string methodName = nameof(UpdateAsync);
 
@@ -144,7 +144,7 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
 
             if (idsToFetch.Any())
             {
-                var dbEntities = await repoQry.GetByIdsAsync(idsToFetch, cancellationToken);
+                var dbEntities = await qryRepo.GetByIdsAsync(idsToFetch, cancellationToken);
 
                 foreach (var dbEntity in dbEntities)
                 {
@@ -181,11 +181,11 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
         }
     }
 
-    public virtual async Task<bool> ChangeStatusAsync(Guid id, Guid userId, CurrentStateType status = CurrentStateType.Active, CancellationToken cancellationToken = default)
+    public virtual async Task<bool> ChangeStatusAsync(Guid id, Guid userId, CurrentStateType status, CancellationToken cancellationToken)
     {
         try
         {
-            var entity = await repoQry.GetTrackedOrLoadAsync(id, cancellationToken);
+            var entity = await qryRepo.GetTrackedOrLoadAsync(id, cancellationToken);
 
             if (entity == null)
                 return false;
@@ -204,8 +204,7 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
             throw new DataAccessException(ex, $"Failed to change status for entity {id} of type {typeof(Tb).Name}");
         }
     }
-
-    public virtual async Task<bool> ChangeStatusAsync(IEnumerable<Guid> ids, Guid userId, CurrentStateType status = CurrentStateType.Active, CancellationToken cancellationToken = default)
+    public virtual async Task<bool> ChangeStatusAsync(IEnumerable<Guid> ids, Guid userId, CurrentStateType status, CancellationToken cancellationToken)
     {
         const string methodName = nameof(ChangeStatusAsync);
 
@@ -256,11 +255,26 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
         }
     }
 
-    public virtual async Task<bool> HardDeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public virtual async Task<bool> ActivateAsync(Guid id, Guid userId, CancellationToken cancellationToken)
+        => await ChangeStatusAsync(id, userId, CurrentStateType.Active, cancellationToken);
+    public virtual async Task<bool> ActivateAsync(IEnumerable<Guid> ids, Guid userId, CancellationToken cancellationToken)
+        => await ChangeStatusAsync(ids, userId, CurrentStateType.Active, cancellationToken);
+
+    public virtual async Task<bool> DeactivateAsync(Guid id, Guid userId, CancellationToken cancellationToken)
+        => await ChangeStatusAsync(id, userId, CurrentStateType.InActive, cancellationToken);
+    public virtual async Task<bool> DeactivateAsync(IEnumerable<Guid> ids, Guid userId, CancellationToken cancellationToken)
+        => await ChangeStatusAsync(ids, userId, CurrentStateType.InActive, cancellationToken);
+
+    public virtual async Task<bool> SoftDeleteAsync(Guid id, Guid userId, CancellationToken cancellationToken)
+        => await ChangeStatusAsync(id, userId, CurrentStateType.Deleted, cancellationToken);
+    public virtual async Task<bool> SoftDeleteAsync(IEnumerable<Guid> ids, Guid userId, CancellationToken cancellationToken)
+        => await ChangeStatusAsync(ids, userId, CurrentStateType.Deleted, cancellationToken);
+
+    public virtual async Task<bool> HardDeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         try
         {
-            var entity = await repoQry.GetByIdAsync(id, cancellationToken);
+            var entity = await qryRepo.GetTrackedOrLoadAsync(id, cancellationToken);
 
             if (entity == null)
                 return false;
@@ -275,8 +289,7 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
             throw new DataAccessException(ex, $"Failed to hard delete entity {id} of type {typeof(Tb).Name}");
         }
     }
-
-    public virtual async Task<bool> HardDeleteAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
+    public virtual async Task<bool> HardDeleteAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken)
     {
         const string methodName = nameof(ChangeStatusAsync);
 
@@ -287,9 +300,7 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
         }
 
         if (!ids.Any())
-        {
             return true;
-        }
 
         try
         {
@@ -321,65 +332,6 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
             throw new DataAccessException(ex,
                 $"Failed to hard delete for multiple entities of type {typeof(Tb).Name}");
         }
-    }
-
-    public virtual async Task<bool> HardDeleteAsync(Tb entity, CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            if (entity == null)
-            {
-                return false;
-            }
-
-            context.Entry(entity).State = EntityState.Deleted;
-            await context.SaveChangesAsync(cancellationToken);
-
-            return true;
-        }
-        catch (Exception ex)
-        {
-            throw new DataAccessException(ex, $"Failed to hard delete entity {entity.Id} of type {typeof(Tb).Name}");
-        }
-    }
-
-    public virtual async Task<bool> HardDeleteAsync(IEnumerable<Tb> entities, CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            if (entities == null)
-            {
-                return false;
-            }
-
-            foreach (var entity in entities)
-            {
-                context.Entry(entity).State = EntityState.Deleted;
-            }
-
-            await context.SaveChangesAsync(cancellationToken);
-
-            return true;
-        }
-        catch (Exception ex)
-        {
-            foreach (var entity in entities)
-            {
-                throw new DataAccessException(ex, $"Failed to hard delete entity {entity.Id} of type {typeof(Tb).Name}");
-            }
-
-            return false;
-        }
-    }
-
-    public virtual async Task<bool> SoftDeleteAsync(Guid id, Guid userId, CancellationToken cancellationToken = default)
-    {
-        return await ChangeStatusAsync(id, userId, (int)CurrentStateType.Deleted, cancellationToken);
-    }
-
-    public virtual async Task<bool> SoftDeleteAsync(IEnumerable<Guid> ids, Guid userId, CancellationToken cancellationToken = default)
-    {
-        return await ChangeStatusAsync(ids, userId, (int)CurrentStateType.Deleted, cancellationToken);
     }
 
 }

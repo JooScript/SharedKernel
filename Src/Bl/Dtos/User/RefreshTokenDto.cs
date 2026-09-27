@@ -59,4 +59,5 @@ public class RefreshTokenDto : SharedKernelBaseDto
     [DataType(DataType.DateTime, ErrorMessage = "Please enter a valid datetime.")]
     [FutureDate(ErrorMessage = "Expiration date must be in the future.")]
     public required DateTime Expires { get; set; }
+
 }

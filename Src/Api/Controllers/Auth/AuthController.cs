@@ -29,7 +29,7 @@ public class AuthController<TDbContext>(
     IToken tokenService,
     IUserQry userQryService,
     IUserCmd userCmdService,
-    IRefreshTokens<TDbContext> refreshTokenService,
+    IRefreshToken<TDbContext> refreshTokenService,
     ILogger<AuthController<TDbContext>> logger,
     string refreshTokenCookieName = "X-REFRESH-TOKEN",
     string csrfTokenCookieName = "X-CSRF-TOKEN",
@@ -202,17 +202,8 @@ public class AuthController<TDbContext>(
 
         (Claim[] claims, UserDto user) userData = await userQryService.GetClaims(request.Email);
         string? accessToken = tokenService.GenerateAccessToken(userData.claims);
-        string? refreshToken = refreshTokenService.GenerateRefreshToken();
 
-        var newRefreshDto = new RefreshTokenDto
-        {
-            Id = Guid.NewGuid(),
-            Token = refreshToken,
-            UserId = userData.user.Id,
-            CSRFToken = Guid.NewGuid(),
-            Expires = DateTime.UtcNow.AddDays(7),
-            CurrentState = CurrentStateType.Active
-        };
+        var newRefreshDto = refreshTokenService.GenerateRefreshToken(userData.user.Id);
 
         await refreshTokenService.Refresh(newRefreshDto);
 
@@ -549,19 +540,10 @@ public class AuthController<TDbContext>(
             return Unauthorized(ApiResponse<object>.FailResponse("Invalid or expired refresh token."));
         }
 
-        string? newRefreshToken = refreshTokenService.GenerateRefreshToken();
+        var newRefreshDto = refreshTokenService.GenerateRefreshToken(storedRefreshToken.UserId);
 
-        var newRefreshDto = new RefreshTokenDto
-        {
-            Id = Guid.NewGuid(),
-            Token = newRefreshToken,
-            CSRFToken = Guid.NewGuid(),
-            UserId = storedRefreshToken.UserId,
-            Expires = DateTime.UtcNow.AddDays(7),
-            CurrentState = CurrentStateType.Active
-        };
-
-        await refreshTokenService.Refresh(newRefreshDto);
+        if (!await refreshTokenService.Refresh(newRefreshDto))
+            return StatusCode(StatusCodes.Status500InternalServerError, "Failed to refresh token.");
 
         AppendCookies(newRefreshDto);
 

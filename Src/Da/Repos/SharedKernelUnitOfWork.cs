@@ -1,8 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
-using Microsoft.Extensions.Logging;
 using SharedKernel.Da.Contracts;
-using System.Collections.Concurrent;
 
 namespace SharedKernel.Da.Repos;
 

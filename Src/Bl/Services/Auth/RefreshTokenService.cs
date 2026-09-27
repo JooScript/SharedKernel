@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SharedKernel.Bl.Contracts.Auth;
-using SharedKernel.Bl.Contracts.Events;
 using SharedKernel.Bl.Dtos.User;
 using SharedKernel.Bl.Services.Base;
 using SharedKernel.Da.Contracts;
@@ -13,44 +12,82 @@ namespace SharedKernel.Bl.Services.Auth;
 
 public class RefreshTokenService<TDbContext>
     : SharedKernelBaseService<TbRefreshToken, RefreshTokenDto, TDbContext>,
-    IRefreshTokens<TDbContext>
+    IRefreshToken<TDbContext>
     where TDbContext : DbContext
 {
-    ISharedKernelTableCmdRepo<TbRefreshToken, TDbContext> repoCmd;
-    ISharedKernelTableQryRepo<TbRefreshToken, TDbContext> repoQry;
+    ISharedKernelTableCmdRepo<TbRefreshToken, TDbContext> cmdRepo;
+    ISharedKernelTableQryRepo<TbRefreshToken, TDbContext> qryRepo;
 
     public RefreshTokenService(
-    ISharedKernelTableQryRepo<TbRefreshToken, TDbContext> repoQry,
-    ISharedKernelTableCmdRepo<TbRefreshToken, TDbContext> repoCmd,
-    IUserQry userQry,
-    ICrudPublisher publisher)
-    : base(repoCmd, repoQry, userQry)
+    ISharedKernelTableQryRepo<TbRefreshToken, TDbContext> qryRepo,
+    ISharedKernelTableCmdRepo<TbRefreshToken, TDbContext> cmdRepo,
+    IUserQry userQry)
+    : base(cmdRepo, qryRepo, userQry)
     {
-        this.repoCmd = repoCmd;
-        this.repoQry = repoQry;
+        this.cmdRepo = cmdRepo;
+        this.qryRepo = qryRepo;
     }
 
-    public async Task<bool> Refresh(RefreshTokenDto tokenDto, CancellationToken cancellationToken = default)
+    public async Task<bool> Refresh(RefreshTokenDto tokenDto, CancellationToken cancellationToken)
     {
-        var tokenList = await repoQry.FindAsync(a => a.CreatedBy == tokenDto.UserId && a.CurrentState == CurrentStateType.Active, cancellationToken);
-
-        foreach (TbRefreshToken dbToken in tokenList)
+        try
         {
-            await repoCmd.ChangeStatusAsync(dbToken.Id, tokenDto.UserId, CurrentStateType.InActive, cancellationToken);
+            bool deactivateTokens = await DeactivateAllTokensAsync(tokenDto.UserId, cancellationToken);
+
+            if (!deactivateTokens)
+                throw new Exception("Token deactivation failed");
+
+            var dbTokens = ToEntity(tokenDto);
+
+            dbTokens.CreatedBy = tokenDto.UserId;
+
+            return (await cmdRepo.AddAsync(dbTokens, cancellationToken)).Success;
         }
-
-        TbRefreshToken dbTokens = ToEntity(tokenDto);
-
-        dbTokens.CreatedBy = tokenDto.UserId;
-
-        await repoCmd.AddAsync(dbTokens);
-        return true;
+        catch (Exception ex)
+        {
+            throw new Exception("Error while token refreshing", ex);
+        }
     }
 
-    public async Task<RefreshTokenDto?> GetByToken(string token, CancellationToken cancellationToken = default)
+    private async Task<bool> DeactivateAllTokensAsync(Guid userId, CancellationToken cancellationToken)
     {
-        var tokenEntity = await repoQry.GetFirstOrDefaultAsync(a => a.Token == token, cancellationToken);
+        try
+        {
+            var tokenList = await qryRepo.FindAsync(a =>
+            a.CreatedBy == userId &&
+            a.CurrentState != CurrentStateType.InActive,
+            cancellationToken);
+
+            var ids = tokenList.Select(s => s.Id);
+
+            return await cmdRepo.DeactivateAsync(ids, userId, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception("Error while token refreshing", ex);
+        }
+    }
+
+
+
+    public async Task<RefreshTokenDto?> GetByToken(string token, CancellationToken cancellationToken)
+    {
+        var tokenEntity = await qryRepo.GetFirstOrDefaultAsync(a => a.Token == token, cancellationToken);
+
         return tokenEntity != null ? ToDto(tokenEntity) : null;
+    }
+
+    public RefreshTokenDto GenerateRefreshToken(Guid userId)
+    {
+        return new RefreshTokenDto
+        {
+            Id = Guid.NewGuid(),
+            Token = GenerateToken(),
+            UserId = userId,
+            CSRFToken = Guid.NewGuid(),
+            Expires = DateTime.UtcNow.AddDays(7),
+            CurrentState = CurrentStateType.Active
+        };
     }
 
     /// <summary>
@@ -59,7 +96,7 @@ public class RefreshTokenService<TDbContext>
     /// <returns>
     /// A base64-encoded secure random refresh token.
     /// </returns>
-    public string GenerateRefreshToken()
+    public string GenerateToken()
     {
         byte[] randomNumber = new byte[32];
 
@@ -81,7 +118,7 @@ public class RefreshTokenService<TDbContext>
             CSRFToken = entity.CSRFToken,
             Token = entity.Token,
             Expires = entity.Expires,
-            UserId = entity.CreatedBy
+            UserId = entity.CreatedBy,
         };
     }
 
@@ -100,5 +137,6 @@ public class RefreshTokenService<TDbContext>
             CreatedBy = dto.UserId,
         };
     }
+
 
 }

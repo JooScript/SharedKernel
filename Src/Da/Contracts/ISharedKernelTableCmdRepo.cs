@@ -8,24 +8,25 @@ public interface ISharedKernelTableCmdRepo<Tb, TDbContext>
     where Tb : SharedKernelBaseTable
     where TDbContext : DbContext
 {
-    Task<SaveResultType> AddAsync(Tb entity, CancellationToken cancellationToken = default);
+    Task<SaveResultType> AddAsync(Tb entity, CancellationToken cancellationToken);
+    Task<bool> AddAsync(IEnumerable<Tb> entities, CancellationToken cancellationToken);
 
-    Task<bool> AddAsync(IEnumerable<Tb> entities, CancellationToken cancellationToken = default);
+    Task<bool> UpdateAsync(Tb entity, CancellationToken cancellationToken);
+    Task<bool> UpdateAsync(IEnumerable<Tb> entities, CancellationToken cancellationToken);
 
-    Task<bool> UpdateAsync(Tb entity, CancellationToken cancellationToken = default);
+    Task<bool> ChangeStatusAsync(Guid id, Guid userId, CurrentStateType status, CancellationToken cancellationToken);
+    Task<bool> ChangeStatusAsync(IEnumerable<Guid> ids, Guid userId, CurrentStateType status, CancellationToken cancellationToken);
 
-    Task<bool> UpdateAsync(IEnumerable<Tb> entities, CancellationToken cancellationToken = default);
+    Task<bool> ActivateAsync(Guid id, Guid userId, CancellationToken cancellationToken);
+    Task<bool> ActivateAsync(IEnumerable<Guid> ids, Guid userId, CancellationToken cancellationToken);
 
-    Task<bool> ChangeStatusAsync(Guid id, Guid userId, CurrentStateType status = CurrentStateType.Active, CancellationToken cancellationToken = default);
+    Task<bool> DeactivateAsync(Guid id, Guid userId, CancellationToken cancellationToken);
+    Task<bool> DeactivateAsync(IEnumerable<Guid> ids, Guid userId, CancellationToken cancellationToken);
 
-    Task<bool> ChangeStatusAsync(IEnumerable<Guid> ids, Guid userId, CurrentStateType status = CurrentStateType.Active, CancellationToken cancellationToken = default);
+    Task<bool> SoftDeleteAsync(Guid id, Guid userId, CancellationToken cancellationToken);
+    Task<bool> SoftDeleteAsync(IEnumerable<Guid> ids, Guid userId, CancellationToken cancellationToken);
 
-    Task<bool> HardDeleteAsync(Guid id, CancellationToken cancellationToken = default);
-
-    Task<bool> HardDeleteAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default);
-
-    Task<bool> SoftDeleteAsync(Guid id, Guid userId, CancellationToken cancellationToken = default);
-
-    Task<bool> SoftDeleteAsync(IEnumerable<Guid> ids, Guid userId, CancellationToken cancellationToken = default);
+    Task<bool> HardDeleteAsync(Guid id, CancellationToken cancellationToken);
+    Task<bool> HardDeleteAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken);
 
 }
