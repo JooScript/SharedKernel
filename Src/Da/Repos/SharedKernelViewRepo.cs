@@ -1,17 +1,23 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using SharedKernel.Da.Contracts;
+using SharedKernel.Da.Contracts.Models;
 using SharedKernel.Da.Exceptions;
 using System.Linq.Expressions;
 
 namespace SharedKernel.Da.Repos;
 
-public class SharedKernelViewRepo<Vw, TDbContext>(TDbContext context) : ISharedKernelViewRepo<Vw>
+public class SharedKernelViewRepo<Vw, TDbContext>(
+    TDbContext context,
+    ILogger<SharedKernelViewRepo<Vw, TDbContext>> logger)
+    : ISharedKernelViewRepo<Vw>
     where Vw : class
     where TDbContext : DbContext
 {
     protected readonly DbSet<Vw> vwSet = (context ?? throw new ArgumentNullException(nameof(context))).Set<Vw>();
 
-    public async Task<IReadOnlyList<Vw>> GetAllAsync(CancellationToken cancellationToken = default)
+    public virtual async Task<IReadOnlyList<Vw>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         try
         {
@@ -23,7 +29,7 @@ public class SharedKernelViewRepo<Vw, TDbContext>(TDbContext context) : ISharedK
         }
     }
 
-    public async Task<Vw?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public virtual async Task<Vw?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -35,8 +41,14 @@ public class SharedKernelViewRepo<Vw, TDbContext>(TDbContext context) : ISharedK
         }
     }
 
-    public async Task<Vw?> GetFirstOrDefaultAsync(Expression<Func<Vw, bool>> filter, CancellationToken cancellationToken = default)
+    public virtual async Task<Vw?> GetFirstOrDefaultAsync(Expression<Func<Vw, bool>> filter, CancellationToken cancellationToken = default)
     {
+        if (filter == null)
+        {
+            logger.LogWarning("Predicate cannot be null in {Method}", nameof(GetFirstOrDefaultAsync));
+            throw new ArgumentNullException(nameof(filter));
+        }
+
         try
         {
             return await vwSet.Where(filter).AsNoTracking().FirstOrDefaultAsync(cancellationToken);
@@ -47,8 +59,14 @@ public class SharedKernelViewRepo<Vw, TDbContext>(TDbContext context) : ISharedK
         }
     }
 
-    public async Task<IReadOnlyList<Vw>> GetListAsync(Expression<Func<Vw, bool>> filter, CancellationToken cancellationToken = default)
+    public virtual async Task<IReadOnlyList<Vw>> GetListAsync(Expression<Func<Vw, bool>> filter, CancellationToken cancellationToken = default)
     {
+        if (filter == null)
+        {
+            logger.LogWarning("Predicate cannot be null in {Method}", nameof(GetListAsync));
+            throw new ArgumentNullException(nameof(filter));
+        }
+
         try
         {
             return await vwSet.Where(filter).AsNoTracking().ToListAsync(cancellationToken);
