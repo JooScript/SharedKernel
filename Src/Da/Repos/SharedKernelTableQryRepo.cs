@@ -17,9 +17,7 @@ public class SharedKernelTableQryRepo<Tb, TDbContext>(
 {
     protected readonly DbSet<Tb> tbDbSet = (context ?? throw new ArgumentNullException(nameof(context))).Set<Tb>();
 
-    public async Task<Tb?> GetTrackedOrLoadAsync(
-        Guid id,
-        CancellationToken cancellationToken = default)
+    public async Task<Tb?> GetTrackedOrLoadAsync(Guid id, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -35,9 +33,7 @@ public class SharedKernelTableQryRepo<Tb, TDbContext>(
         }
     }
 
-    public virtual async Task<Tb?> GetByIdAsync(
-        Guid id,
-        CancellationToken cancellationToken = default)
+    public virtual async Task<Tb?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         try
         {
