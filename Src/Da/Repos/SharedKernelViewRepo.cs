@@ -9,13 +9,13 @@ public class SharedKernelViewRepo<Vw, TDbContext>(TDbContext context) : ISharedK
     where Vw : class
     where TDbContext : DbContext
 {
-    protected readonly DbSet<Vw> dbSet = (context ?? throw new ArgumentNullException(nameof(context))).Set<Vw>();
+    protected readonly DbSet<Vw> vwSet = (context ?? throw new ArgumentNullException(nameof(context))).Set<Vw>();
 
     public async Task<IReadOnlyList<Vw>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         try
         {
-            return await dbSet.AsNoTracking().ToListAsync(cancellationToken);
+            return await vwSet.AsNoTracking().ToListAsync(cancellationToken);
         }
         catch (Exception ex) when (ex is not DataAccessException)
         {
@@ -27,7 +27,7 @@ public class SharedKernelViewRepo<Vw, TDbContext>(TDbContext context) : ISharedK
     {
         try
         {
-            return await dbSet.FindAsync(new object[] { id }, cancellationToken);
+            return await vwSet.FindAsync(new object[] { id }, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -39,7 +39,7 @@ public class SharedKernelViewRepo<Vw, TDbContext>(TDbContext context) : ISharedK
     {
         try
         {
-            return await dbSet.Where(filter).AsNoTracking().FirstOrDefaultAsync(cancellationToken);
+            return await vwSet.Where(filter).AsNoTracking().FirstOrDefaultAsync(cancellationToken);
         }
         catch (Exception ex)
         {
@@ -51,7 +51,7 @@ public class SharedKernelViewRepo<Vw, TDbContext>(TDbContext context) : ISharedK
     {
         try
         {
-            return await dbSet.Where(filter).AsNoTracking().ToListAsync(cancellationToken);
+            return await vwSet.Where(filter).AsNoTracking().ToListAsync(cancellationToken);
         }
         catch (Exception ex) when (ex is not DataAccessException)
         {
