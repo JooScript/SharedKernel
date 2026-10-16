@@ -31,7 +31,7 @@ public class ApiResponse<T>
     /// <summary>
     /// Gets or sets the collection of errors associated with the response.
     /// </summary>
-    public List<string>? Errors { get; set; }
+    public IEnumerable<string>? Errors { get; set; }
 
     /// <summary>
     /// Creates a successful API response.
@@ -67,7 +67,7 @@ public class ApiResponse<T>
     /// <returns>
     /// A failed <see cref="ApiResponse{T}"/> instance.
     /// </returns>
-    public static ApiResponse<T> FailResponse(string message, List<string>? errors = null)
+    public static ApiResponse<T> FailResponse(string message, IEnumerable<string>? errors = null)
     {
         return new ApiResponse<T>
         {
