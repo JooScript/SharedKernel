@@ -232,7 +232,7 @@ public class SharedKernelViewRepo<Vw, TDbContext>(
         }
     }
 
-    // ---------- Helpers ----------
+    #region Helpers
 
     private IQueryable<Vw> BuildQuery(
         Expression<Func<Vw, bool>>? filter,
@@ -265,4 +265,7 @@ public class SharedKernelViewRepo<Vw, TDbContext>(
         => selector != null
             ? query.Select(selector)
             : (IQueryable<TResult>)(object)query;
+
+    #endregion
+
 }
