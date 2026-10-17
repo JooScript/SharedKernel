@@ -80,9 +80,29 @@ public class SharedKernelViewRepo<Vw, TDbContext>(
     public virtual async Task<IReadOnlyList<Vw>> FindAsync(Expression<Func<Vw, bool>> filter, CancellationToken cancellationToken)
         => await GetListAsync(filter, cancellationToken);
 
+
+    public virtual async Task<int> CountAsync(
+        Expression<Func<Vw, bool>>? filter,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            IQueryable<Vw> query = vwSet.AsQueryable();
+
+            if (filter != null)
+                query = query.Where(filter);
+
+            return await query.CountAsync(cancellationToken);
+        }
+        catch (Exception ex) when (ex is not DataAccessException)
+        {
+            throw new DataAccessException(ex, $"Failed to count items of type {typeof(Vw).Name}");
+        }
+    }
+
     public virtual async Task<bool> IsExistsAsync(
         Expression<Func<Vw, bool>> filter,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         if (filter == null) throw new ArgumentNullException(nameof(filter));
 
