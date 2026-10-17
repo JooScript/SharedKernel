@@ -218,11 +218,11 @@ public class SharedKernelTableQryRepo<Tb, TDbContext>(
     }
 
     public virtual async Task<IEnumerable<TResult>> GetListAsync<TResult>(
-        Expression<Func<Tb, bool>>? filter = null,
-        Expression<Func<Tb, TResult>>? selector = null,
-        Expression<Func<Tb, object>>? orderBy = null,
-        bool isDescending = false,
-        CancellationToken cancellationToken = default,
+        Expression<Func<Tb, bool>>? filter,
+        Expression<Func<Tb, TResult>>? selector,
+        Expression<Func<Tb, object>>? orderBy,
+        bool isDescending,
+        CancellationToken cancellationToken,
         params Expression<Func<Tb, object>>[] includes)
     {
         try
