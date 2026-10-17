@@ -41,7 +41,7 @@ public class SharedKernelViewRepo<Vw, TDbContext>(
         }
     }
 
-    public virtual async Task<Vw?> GetFirstOrDefaultAsync(Expression<Func<Vw, bool>> filter, CancellationToken cancellationToken = default)
+    public virtual async Task<Vw?> GetFirstOrDefaultAsync(Expression<Func<Vw, bool>> filter, CancellationToken cancellationToken)
     {
         if (filter == null)
         {
