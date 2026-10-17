@@ -80,4 +80,20 @@ public class SharedKernelViewRepo<Vw, TDbContext>(
     public virtual async Task<IReadOnlyList<Vw>> FindAsync(Expression<Func<Vw, bool>> filter, CancellationToken cancellationToken)
         => await GetListAsync(filter, cancellationToken);
 
+    public virtual async Task<bool> IsExistsAsync(
+        Expression<Func<Vw, bool>> filter,
+        CancellationToken cancellationToken = default)
+    {
+        if (filter == null) throw new ArgumentNullException(nameof(filter));
+
+        try
+        {
+            return await vwSet.AnyAsync(filter, cancellationToken);
+        }
+        catch (Exception ex) when (ex is not DataAccessException)
+        {
+            throw new DataAccessException(ex, $"Failed in existence check for type {typeof(Vw).Name}");
+        }
+    }
+
 }
