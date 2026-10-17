@@ -17,7 +17,7 @@ public class SharedKernelViewRepo<Vw, TDbContext>(
 {
     protected readonly DbSet<Vw> vwSet = (context ?? throw new ArgumentNullException(nameof(context))).Set<Vw>();
 
-    public virtual async Task<IReadOnlyList<Vw>> GetAllAsync(CancellationToken cancellationToken = default)
+    public virtual async Task<IReadOnlyList<Vw>> GetAllAsync(CancellationToken cancellationToken)
     {
         try
         {
@@ -29,7 +29,7 @@ public class SharedKernelViewRepo<Vw, TDbContext>(
         }
     }
 
-    public virtual async Task<Vw?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public virtual async Task<Vw?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
         try
         {
