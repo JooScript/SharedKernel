@@ -59,7 +59,7 @@ public class SharedKernelViewRepo<Vw, TDbContext>(
         }
     }
 
-    public virtual async Task<IReadOnlyList<Vw>> GetListAsync(Expression<Func<Vw, bool>> filter, CancellationToken cancellationToken = default)
+    public virtual async Task<IReadOnlyList<Vw>> GetListAsync(Expression<Func<Vw, bool>> filter, CancellationToken cancellationToken)
     {
         if (filter == null)
         {
