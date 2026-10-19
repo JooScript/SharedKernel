@@ -9,6 +9,8 @@ public class NotFutureDateAttribute : ValidationAttribute
         if (value is null)
             return ValidationResult.Success;
 
+        value = value is DateTime dateTimeValue ? DateOnly.FromDateTime(dateTimeValue) : value;
+
         if (value is not DateOnly dateTime)
             return new ValidationResult("Invalid date value.");
 
