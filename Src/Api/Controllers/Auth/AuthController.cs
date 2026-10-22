@@ -9,6 +9,7 @@ using SharedKernel.Bl.Contracts.Auth;
 using SharedKernel.Bl.Dtos.User;
 using System.Security.Claims;
 using static SharedKernel.Domains.Types.CurrentState;
+
 namespace SharedKernel.Api.Controllers.Auth;
 
 /// <summary>
@@ -50,7 +51,7 @@ public class AuthController<TDbContext>(
     [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<ApiResponse<string>>> CreateAdmin([FromBody] CreateUserDto request)
+    public async Task<ActionResult<ApiResponse<string>>> CreateAdmin([FromBody] CreateUserDto request, CancellationToken cancellationToken)
     {
         logger.LogInformation("CreateAdmin request received for email: {Email}", request?.Email);
 
@@ -70,7 +71,7 @@ public class AuthController<TDbContext>(
             return BadRequest(ApiResponse<string>.FailResponse("Validation failed", validationErrors));
         }
 
-        UserResultDto result = await userCmdService.CreateAdminAsync(request);
+        UserResultDto result = await userCmdService.CreateAdminAsync(request, cancellationToken);
 
         if (result.Success)
         {
@@ -98,7 +99,7 @@ public class AuthController<TDbContext>(
     [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<ApiResponse<string>>> CreateUser([FromBody] CreateUserDto request)
+    public async Task<ActionResult<ApiResponse<string>>> CreateUser([FromBody] CreateUserDto request, CancellationToken cancellationToken)
     {
         logger.LogInformation("CreateUser request received for email: {Email}", request?.Email);
 
@@ -118,7 +119,7 @@ public class AuthController<TDbContext>(
             return BadRequest(ApiResponse<string>.FailResponse("Validation failed", validationErrors));
         }
 
-        UserResultDto result = await userCmdService.CreateUserAsync(request);
+        UserResultDto result = await userCmdService.CreateUserAsync(request, cancellationToken);
 
         if (result.Success)
         {
@@ -289,11 +290,11 @@ public class AuthController<TDbContext>(
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<ApiResponse<bool>>> ConfirmEmail([FromQuery] string email, [FromQuery] string token)
+    public async Task<ActionResult<ApiResponse<bool>>> ConfirmEmail([FromQuery] string email, [FromQuery] string token, CancellationToken cancellationToken)
     {
         logger.LogInformation("Email confirmation attempt for email: {Email}", email);
 
-        bool result = await userCmdService.ConfirmEmailAsync(email, token);
+        bool result = await userCmdService.ConfirmEmailAsync(email, token, cancellationToken);
 
         if (!result)
         {
@@ -342,7 +343,7 @@ public class AuthController<TDbContext>(
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<ApiResponse<bool>>> ForgotPassword(ForgotPasswordDto dto)
+    public async Task<ActionResult<ApiResponse<bool>>> ForgotPassword(ForgotPasswordDto dto, CancellationToken cancellationToken)
     {
         if (dto is null)
         {
@@ -362,7 +363,7 @@ public class AuthController<TDbContext>(
             return BadRequest(ApiResponse<bool>.FailResponse("Validation failed", validationErrors));
         }
 
-        bool sent = await userCmdService.SendPasswordResetTokenAsync(dto.Email);
+        bool sent = await userCmdService.SendPasswordResetTokenAsync(dto.Email, cancellationToken);
 
         if (!sent)
         {
@@ -412,7 +413,7 @@ public class AuthController<TDbContext>(
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<ApiResponse<bool>>> ResetPassword(ResetPasswordDto dto)
+    public async Task<ActionResult<ApiResponse<bool>>> ResetPassword(ResetPasswordDto dto, CancellationToken cancellationToken)
     {
         logger.LogInformation("Password reset attempt for email: {Email}", dto?.Email);
 
@@ -426,7 +427,7 @@ public class AuthController<TDbContext>(
             return BadRequest(ApiResponse<bool>.FailResponse("Validation failed", validationErrors));
         }
 
-        if (!(dto is not null && await userCmdService.ResetPasswordAsync(dto)))
+        if (!(dto is not null && await userCmdService.ResetPasswordAsync(dto, cancellationToken)))
         {
             logger.LogWarning("Password reset failed for email: {Email}", dto?.Email);
             return BadRequest(ApiResponse<bool>.FailResponse("Failed to reset password."));
@@ -463,7 +464,7 @@ public class AuthController<TDbContext>(
     [HttpPost("refresh-access-token")]
     [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> RefreshAccessToken()
+    public async Task<IActionResult> RefreshAccessToken(CancellationToken cancellationToken)
     {
         logger.LogInformation("Refresh access token request received.");
 
@@ -473,7 +474,7 @@ public class AuthController<TDbContext>(
             return Unauthorized(ApiResponse<object>.FailResponse("No refresh token found."));
         }
 
-        var storedRefreshToken = await refreshTokenService.GetByToken(refreshToken);
+        var storedRefreshToken = await refreshTokenService.GetByToken(refreshToken, cancellationToken);
 
         string? storedCsrfToken = Request.Headers[csrfTokenHeaderName].FirstOrDefault();
 
@@ -520,7 +521,7 @@ public class AuthController<TDbContext>(
     [HttpPost("refresh-refresh-token")]
     [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> RefreshRefreshToken()
+    public async Task<IActionResult> RefreshRefreshToken(CancellationToken cancellationToken)
     {
         logger.LogInformation("Refresh refresh token request received.");
 
@@ -530,7 +531,7 @@ public class AuthController<TDbContext>(
             return Unauthorized(ApiResponse<object>.FailResponse("No refresh token found."));
         }
 
-        var storedRefreshToken = await refreshTokenService.GetByToken(refreshToken);
+        var storedRefreshToken = await refreshTokenService.GetByToken(refreshToken, cancellationToken);
 
         string? storedCsrfToken = Request.Headers[csrfTokenHeaderName].FirstOrDefault();
 
@@ -543,9 +544,9 @@ public class AuthController<TDbContext>(
             return Unauthorized(ApiResponse<object>.FailResponse("Invalid or expired refresh token."));
         }
 
-        var newRefreshDto = refreshTokenService.GenerateRefreshToken(storedRefreshToken.UserId);
+        var newRefreshDto = refreshTokenService.GenerateRefreshToken(storedRefreshToken.UserId, storedRefreshToken.SessionId);
 
-        if (!await refreshTokenService.RefreshAsync(newRefreshDto))
+        if (!await refreshTokenService.RefreshAsync(newRefreshDto, cancellationToken))
             return StatusCode(StatusCodes.Status500InternalServerError, "Failed to refresh token.");
 
         AppendCookies(newRefreshDto);
@@ -568,7 +569,7 @@ public class AuthController<TDbContext>(
     [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<ApiResponse<string>>> Register([FromBody] CreateUserDto request)
+    public async Task<ActionResult<ApiResponse<string>>> Register([FromBody] CreateUserDto request, CancellationToken cancellationToken)
     {
         logger.LogInformation("Register request received for email: {Email}", request?.Email);
 
@@ -587,7 +588,7 @@ public class AuthController<TDbContext>(
             logger.LogWarning("Register validation failed for email: {Email}. Errors: {Errors}", request.Email, validationErrors);
             return BadRequest(ApiResponse<string>.FailResponse("Validation failed", validationErrors));
         }
-        UserResultDto result = await userCmdService.CreateUserAsync(request);
+        UserResultDto result = await userCmdService.CreateUserAsync(request, cancellationToken);
 
         if (result.Success)
         {
