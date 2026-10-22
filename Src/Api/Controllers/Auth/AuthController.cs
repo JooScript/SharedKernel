@@ -200,16 +200,15 @@ public class AuthController<TDbContext>(
             return Ok(ApiResponse<object>.FailResponse("2FA required"));
         }
 
-        (Claim[] claims, UserDto user) userData = await userQryService.GetClaims(request.Email);
-        string? accessToken = tokenService.GenerateAccessToken(userData.claims);
+        var userData = await userQryService.GetClaims(request.Email);
+        var newRefreshTokenDto = refreshTokenService.GenerateRefreshToken(userData.user.Id);
 
-        var newRefreshDto = refreshTokenService.GenerateRefreshToken(userData.user.Id);
+        await refreshTokenService.Refresh(newRefreshTokenDto);
 
-        await refreshTokenService.Refresh(newRefreshDto);
+        AppendCookies(newRefreshTokenDto);
 
-        AppendCookies(newRefreshDto);
-
-        var loginResponse = new
+        logger.LogInformation("Login successful for email: {Email}, UserId: {UserId}", request.Email, userData.user.Id);
+        return Ok(ApiResponse<object>.SuccessResponse(new
         {
             UserInfo = new
             {
@@ -218,11 +217,8 @@ public class AuthController<TDbContext>(
                 userData.user.FirstName,
                 userData.user.LastName,
             },
-            AccessToken = accessToken
-        };
-
-        logger.LogInformation("Login successful for email: {Email}, UserId: {UserId}", request.Email, userData.user.Id);
-        return Ok(ApiResponse<object>.SuccessResponse(loginResponse, "Login successful"));
+            AccessToken = tokenService.GenerateAccessToken(userData.claims)
+        }, "Login successful"));
     }
 
     /// <summary>
