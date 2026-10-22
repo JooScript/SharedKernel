@@ -32,6 +32,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped(typeof(ISharedKernelTableCmdRepo<,>), typeof(SharedKernelTableCmdRepo<,>));
         services.AddScoped(typeof(ISharedKernelUnitOfWork<>), typeof(SharedKernelUnitOfWork<>));
 
+        services.AddScoped(typeof(IUserSessionService<>), typeof(UserSessionService<>));
         services.AddScoped(typeof(IRefreshToken<>), typeof(RefreshTokenService<>));
         services.AddScoped<IToken, TokenService>();
         services.AddScoped<IEmailing, EmailingService>();
