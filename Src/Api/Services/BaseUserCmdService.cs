@@ -280,20 +280,58 @@ public abstract class BaseUserCmdService<TDbContext, AppUser>(
             return LogInResultDto.Fail("Email not confirmed.");
         }
 
-        if (await userManager.GetTwoFactorEnabledAsync(user))
-        {
-            logger.LogInformation("user: Login for '{Email}' requires 2FA.", dto.Email);
+        var userData = await userQryService.GetClaims(dto.Email);
 
-            return new UserResultDto { Success = true, Requires2FA = true };
+        var session = await userSessionService.AddAsync(UserAgent, IpAddress, user.Id, cancellationToken);
+
+        var newRefreshTokenDto = refreshTokenService.GenerateRefreshToken(userData.user.Id, session.Id);
+
+        if (!await refreshTokenService.RefreshAsync(newRefreshTokenDto, cancellationToken))
+        {
+            logger.LogError("Failed to create refresh token for user {UserId}",
+                userData.user.Id);
+
+            return new LogInResultDto
+            {
+                UserResult = new UserResultDto
+                {
+                    Success = false,
+                    Errors = new List<string> { "Failed to create refresh token." }
+                }
+            };
+
         }
 
         logger.LogInformation("user: Login for '{Email}' succeeded.", dto.Email);
 
-        return new UserResultDto
+        if (await userManager.GetTwoFactorEnabledAsync(user))
         {
-            Success = true,
-            Email = user.Email,
-            UserId = user.Id
+            logger.LogInformation("user: Login for '{Email}' requires 2FA.", dto.Email);
+
+            return new LogInResultDto
+            {
+                UserResult = new UserResultDto
+                {
+                    Success = true,
+                    Requires2FA = true
+                },
+                NewRefreshTokenDto = newRefreshTokenDto,
+                Claims = userData.claims,
+                UserData = userData.user,
+            };
+        }
+
+        return new LogInResultDto
+        {
+            UserResult = new UserResultDto
+            {
+                Success = true,
+                Email = user.Email,
+                UserId = user.Id
+            },
+            NewRefreshTokenDto = newRefreshTokenDto,
+            Claims = userData.claims,
+            UserData = userData.user,
         };
     }
 
