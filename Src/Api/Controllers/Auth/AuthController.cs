@@ -171,7 +171,7 @@ public class AuthController<TDbContext>(
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<ApiResponse<object>>> LogIn([FromBody] LoginDto request)
+    public async Task<ActionResult<ApiResponse<object>>> LogIn([FromBody] LoginDto request, CancellationToken cancellationToken)
     {
         logger.LogInformation("Login attempt for email: {Email}", request?.Email);
 
@@ -202,7 +202,7 @@ public class AuthController<TDbContext>(
         var userData = await userQryService.GetClaims(request.Email);
         var newRefreshTokenDto = refreshTokenService.GenerateRefreshToken(userData.user.Id);
 
-        if (!await refreshTokenService.RefreshAsync(newRefreshTokenDto))
+        if (!await refreshTokenService.RefreshAsync(newRefreshTokenDto, cancellationToken))
         {
             logger.LogError("Failed to create refresh token for user {UserId}",
                 userData.user.Id);
