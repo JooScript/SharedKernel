@@ -17,6 +17,11 @@ public class RefreshTokenConfig : IEntityTypeConfiguration<TbRefreshToken>
             .IsUnique()
             .HasDatabaseName("UQ_TbRefreshToken_Token");
 
+        builder.HasOne(x => x.Session)
+            .WithMany(x => x.RefreshTokens)
+            .HasForeignKey(x => x.SessionId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.Property(e => e.Expires).IsRequired();
 
     }
