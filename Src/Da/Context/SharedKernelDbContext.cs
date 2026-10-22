@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using SharedKernel.Da.Config;
 using SharedKernel.Da.Identity;
 using System.Reflection;
 
@@ -33,6 +34,7 @@ public partial class SharedKernelDbContext<TUser, TRole>
         base.OnModelCreating(builder);
 
         builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+        builder.ApplyConfiguration(new UserSessionConfig<TUser>());
 
         #region GlobalConfigs
 
