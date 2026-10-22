@@ -32,7 +32,7 @@ public class RefreshTokenService<TDbContext>
     {
         try
         {
-            bool deactivateTokens = await DeactivateAllTokensAsync(tokenDto.UserId, cancellationToken);
+            bool deactivateTokens = await DeactivateAllTokensAsync(tokenDto, cancellationToken);
 
             if (!deactivateTokens)
                 throw new Exception("Token deactivation failed");
@@ -49,26 +49,24 @@ public class RefreshTokenService<TDbContext>
         }
     }
 
-    private async Task<bool> DeactivateAllTokensAsync(Guid userId, CancellationToken cancellationToken)
+    private async Task<bool> DeactivateAllTokensAsync(RefreshTokenDto tokenDto, CancellationToken cancellationToken)
     {
         try
         {
-            var tokenList = await qryRepo.FindAsync(a =>
-            a.CreatedBy == userId &&
-            a.CurrentState != CurrentStateType.InActive,
+            var ids = await qryRepo.FindAsync(
+                a => a.SessionId == tokenDto.SessionId && a.CurrentState == CurrentStateType.Active,
+                a => a.Id,
+                null,
+                true,
             cancellationToken);
 
-            var ids = tokenList.Select(s => s.Id);
-
-            return await cmdRepo.DeactivateAsync(ids, userId, cancellationToken);
+            return await cmdRepo.DeactivateAsync(ids, tokenDto.UserId, cancellationToken);
         }
         catch (Exception ex)
         {
             throw new Exception("Error while token refreshing", ex);
         }
     }
-
-
 
     public async Task<RefreshTokenDto?> GetByToken(string token, CancellationToken cancellationToken)
     {
