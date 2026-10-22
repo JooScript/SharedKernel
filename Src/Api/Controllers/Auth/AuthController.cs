@@ -616,4 +616,13 @@ public class AuthController<TDbContext>(
         SelectMany(v => v.Errors).
         Select(e => e.ErrorMessage);
 
+    protected string? UserAgent =>
+    HttpContext.Request.Headers.UserAgent.ToString();
+
+    protected string? IpAddress =>
+        HttpContext.Connection.RemoteIpAddress?.ToString();
+
+    protected string SessionId =>
+        HttpContext.Session.Id;
+
 }
