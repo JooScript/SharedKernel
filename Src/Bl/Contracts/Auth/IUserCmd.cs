@@ -6,7 +6,7 @@ public interface IUserCmd
 {
     Task<UserResultDto> CreateAdminAsync(CreateUserDto registerDto);
 
-    Task<UserResultDto> LoginAsync(LoginDto loginDto);
+    Task<UserResultDto> LogInAsync(LoginDto loginDto);
 
     Task LogoutAsync();
 

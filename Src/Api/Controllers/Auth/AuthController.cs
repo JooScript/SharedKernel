@@ -181,7 +181,7 @@ public class AuthController<TDbContext>(
             return BadRequest(ApiResponse<object>.FailResponse("Validation failed", ModelStateErrors));
         }
 
-        UserResultDto? userResult = await userCmdService.LoginAsync(request);
+        UserResultDto? userResult = await userCmdService.LogInAsync(request);
 
         if (!userResult.Success)
         {
