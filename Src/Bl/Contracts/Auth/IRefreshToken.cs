@@ -9,10 +9,10 @@ public interface IRefreshToken<TDbContext>
     : IBaseService<TbRefreshToken, RefreshTokenDto>
     where TDbContext : DbContext
 {
-    public Task<bool> RefreshAsync(RefreshTokenDto tokenDto, CancellationToken cancellationToken = default);
+    public Task<bool> RefreshAsync(RefreshTokenDto tokenDto, CancellationToken cancellationToken);
 
-    public Task<RefreshTokenDto?> GetByToken(string token, CancellationToken cancellationToken = default);
+    public Task<RefreshTokenDto?> GetByToken(string token, CancellationToken cancellationToken);
 
-    RefreshTokenDto GenerateRefreshToken(Guid userId);
+    RefreshTokenDto GenerateRefreshToken(Guid userId, Guid sessionId);
 
 }
