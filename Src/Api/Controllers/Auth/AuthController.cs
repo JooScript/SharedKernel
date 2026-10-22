@@ -622,7 +622,4 @@ public class AuthController<TDbContext>(
     protected string? IpAddress =>
         HttpContext.Connection.RemoteIpAddress?.ToString();
 
-    protected string SessionId =>
-        HttpContext.Session.Id;
-
 }
