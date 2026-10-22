@@ -217,6 +217,15 @@ public class SharedKernelTableQryRepo<Tb, TDbContext>(
         }
     }
 
+    public virtual async Task<IEnumerable<TResult>> FindAsync<TResult>(
+        Expression<Func<Tb, bool>>? filter,
+        Expression<Func<Tb, TResult>>? selector,
+        Expression<Func<Tb, object>>? orderBy,
+        bool isDescending,
+        CancellationToken cancellationToken,
+        params Expression<Func<Tb, object>>[] includes)
+        => await GetListAsync(filter, selector, orderBy, isDescending, cancellationToken, includes);
+
     public virtual async Task<IEnumerable<TResult>> GetListAsync<TResult>(
         Expression<Func<Tb, bool>>? filter,
         Expression<Func<Tb, TResult>>? selector,
