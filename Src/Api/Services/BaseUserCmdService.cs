@@ -322,7 +322,7 @@ public abstract class BaseUserCmdService<TDbContext, AppUser>(
     /// <returns>
     /// <c>true</c> if confirmation succeeds; otherwise, <c>false</c>.
     /// </returns>
-    public async Task<bool> ConfirmEmailAsync(string email, string token)
+    public async Task<bool> ConfirmEmailAsync(string email, string token, CancellationToken cancellationToken)
     {
         logger.LogInformation("user: Confirming email for '{Email}'.", email);
 
@@ -352,7 +352,7 @@ public abstract class BaseUserCmdService<TDbContext, AppUser>(
     /// <exception cref="ArgumentException">
     /// Thrown when the email or generated token is invalid.
     /// </exception>
-    public async Task<bool> SendPasswordResetTokenAsync(string email)
+    public async Task<bool> SendPasswordResetTokenAsync(string email, CancellationToken cancellationTokenl)
     {
         logger.LogInformation("user: Sending password reset token to '{Email}'.", email);
 
@@ -453,7 +453,7 @@ public abstract class BaseUserCmdService<TDbContext, AppUser>(
     /// <c>true</c> if the password reset succeeds;
     /// otherwise, <c>false</c>.
     /// </returns>
-    public async Task<bool> ResetPasswordAsync(ResetPasswordDto dto)
+    public async Task<bool> ResetPasswordAsync(ResetPasswordDto dto, CancellationToken cancellationToken)
     {
         logger.LogInformation("user: Resetting password for '{Email}'.", dto?.Email);
 
