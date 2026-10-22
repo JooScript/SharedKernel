@@ -620,6 +620,6 @@ public class AuthController<TDbContext>(
     HttpContext.Request.Headers.UserAgent.ToString();
 
     protected string? IpAddress =>
-        HttpContext.Connection.RemoteIpAddress?.ToString();
+        HttpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString();
 
 }
