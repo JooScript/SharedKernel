@@ -49,5 +49,5 @@ public interface ISharedKernelTableQryRepo<Tb, TDbContext>
     Task<bool> IsExistsAsync(Guid id, CancellationToken cancellationToken);
 
     Task<Tb?> GetTrackedOrLoadAsync(Guid id, CancellationToken cancellationToken);
-
+    Task<IEnumerable<TResult>> FindAsync<TResult>(Expression<Func<Tb, bool>>? filter, Expression<Func<Tb, TResult>>? selector, Expression<Func<Tb, object>>? orderBy, bool isDescending, CancellationToken cancellationToken, params Expression<Func<Tb, object>>[] includes);
 }
