@@ -171,19 +171,14 @@ public class AuthController<TDbContext>(
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<ApiResponse<object>>> Login([FromBody] LoginDto request)
+    public async Task<ActionResult<ApiResponse<object>>> LogIn([FromBody] LoginDto request)
     {
         logger.LogInformation("Login attempt for email: {Email}", request?.Email);
 
         if (!ModelState.IsValid || request is null)
         {
-            var validationErrors = ModelState.Values
-                .SelectMany(v => v.Errors)
-                .Select(e => e.ErrorMessage)
-                .ToList();
-
-            logger.LogWarning("Login validation failed for email: {Email}. Errors: {Errors}", request?.Email, validationErrors);
-            return BadRequest(ApiResponse<object>.FailResponse("Validation failed", validationErrors));
+            logger.LogWarning("Login validation failed for email: {Email}. Errors: {Errors}", request?.Email, ModelStateErrors);
+            return BadRequest(ApiResponse<object>.FailResponse("Validation failed", ModelStateErrors));
         }
 
         UserResultDto? userResult = await userCmdService.LoginAsync(request);
@@ -208,6 +203,7 @@ public class AuthController<TDbContext>(
         AppendCookies(newRefreshTokenDto);
 
         logger.LogInformation("Login successful for email: {Email}, UserId: {UserId}", request.Email, userData.user.Id);
+
         return Ok(ApiResponse<object>.SuccessResponse(new
         {
             UserInfo = new
@@ -229,7 +225,7 @@ public class AuthController<TDbContext>(
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status500InternalServerError)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status401Unauthorized)]
     [HttpPost("logout")]
-    public async Task<ActionResult<ApiResponse<bool>>> Logout()
+    public async Task<ActionResult<ApiResponse<bool>>> LogOut()
     {
         logger.LogInformation("Logout requested by user: {UserId}", User.FindFirstValue(ClaimTypes.NameIdentifier));
 
@@ -614,5 +610,10 @@ public class AuthController<TDbContext>(
             IsEssential = true
         });
     }
+
+    private IEnumerable<string> ModelStateErrors =>
+        ModelState.Values.
+        SelectMany(v => v.Errors).
+        Select(e => e.ErrorMessage);
 
 }
