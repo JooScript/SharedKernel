@@ -77,13 +77,14 @@ public class RefreshTokenService<TDbContext>
         return tokenEntity != null ? ToDto(tokenEntity) : null;
     }
 
-    public RefreshTokenDto GenerateRefreshToken(Guid userId)
+    public RefreshTokenDto GenerateRefreshToken(Guid userId, Guid sessionId)
     {
         return new RefreshTokenDto
         {
             Id = Guid.NewGuid(),
             Token = GenerateToken(),
             UserId = userId,
+            SessionId = sessionId,
             CSRFToken = Guid.NewGuid(),
             Expires = DateTime.UtcNow.AddDays(7),
             CurrentState = CurrentStateType.Active
@@ -119,6 +120,7 @@ public class RefreshTokenService<TDbContext>
             Token = entity.Token,
             Expires = entity.Expires,
             UserId = entity.CreatedBy,
+            SessionId = entity.SessionId
         };
     }
 
@@ -135,6 +137,7 @@ public class RefreshTokenService<TDbContext>
             Token = dto.Token,
             Expires = dto.Expires,
             CreatedBy = dto.UserId,
+            SessionId = dto.SessionId
         };
     }
 
