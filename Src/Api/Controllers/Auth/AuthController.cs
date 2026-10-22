@@ -185,20 +185,31 @@ public class AuthController<TDbContext>(
 
         if (!userResult.Success)
         {
-            logger.LogWarning("Login failed for email: {Email}. Errors: {Errors}", request.Email, userResult.Errors);
+            logger.LogWarning("Login failed for email: {Email}. Errors: {Errors}",
+                request.Email, userResult.Errors);
+
             return Unauthorized(ApiResponse<object>.FailResponse("Login failed", userResult.Errors));
         }
 
         if (userResult.Requires2FA)
         {
-            logger.LogInformation("Login requires 2FA for email: {Email}", request.Email);
+            logger.LogInformation("Login requires 2FA for email: {Email}",
+                request.Email);
+
             return Ok(ApiResponse<object>.FailResponse("2FA required"));
         }
 
         var userData = await userQryService.GetClaims(request.Email);
         var newRefreshTokenDto = refreshTokenService.GenerateRefreshToken(userData.user.Id);
 
-        await refreshTokenService.RefreshAsync(newRefreshTokenDto);
+        if (!await refreshTokenService.RefreshAsync(newRefreshTokenDto))
+        {
+            logger.LogError("Failed to create refresh token for user {UserId}",
+                userData.user.Id);
+
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                ApiResponse<object>.FailResponse("Failed to create refresh token"));
+        }
 
         AppendCookies(newRefreshTokenDto);
 
