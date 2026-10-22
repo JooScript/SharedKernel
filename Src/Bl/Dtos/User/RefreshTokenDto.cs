@@ -60,4 +60,7 @@ public class RefreshTokenDto : SharedKernelBaseDto
     [FutureDate(ErrorMessage = "Expiration date must be in the future.")]
     public required DateTime Expires { get; set; }
 
+    [Required(ErrorMessage = "Session ID is required.")]
+    public required Guid SessionId { get; set; }
+
 }
