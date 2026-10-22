@@ -469,29 +469,4 @@ public abstract class BaseUserCmdService<TDbContext, AppUser>(
         return result.Succeeded;
     }
 
-    #region Helpers
-
-    /// <summary>
-    /// Creates a failed user result containing a single error message.
-    /// </summary>
-    /// <param name="error">
-    /// The error message.
-    /// </param>
-    /// <returns>
-    /// A failed <see cref="UserResultDto"/> instance.
-    /// </returns>
-    private static UserResultDto Fail(string error) => new UserResultDto { Success = false, Errors = new List<string> { error } };
-
-    /// <summary>
-    /// Creates a failed user result containing multiple errors.
-    /// </summary>
-    /// <param name="errors">
-    /// The collection of error messages.
-    /// </param>
-    /// <returns>
-    /// A failed <see cref="UserResultDto"/> instance.
-    /// </returns>
-    private static UserResultDto Fail(List<string> errors) => new UserResultDto { Success = false, Errors = errors };
-
-    #endregion
 }
