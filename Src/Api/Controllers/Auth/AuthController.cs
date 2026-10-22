@@ -182,17 +182,17 @@ public class AuthController<TDbContext>(
             return BadRequest(ApiResponse<object>.FailResponse("Validation failed", ModelStateErrors));
         }
 
-        UserResultDto? userResult = await userCmdService.LogInAsync(request);
+        var logInRes = await userCmdService.LogInAsync(request, UserAgent, IpAddress, cancellationToken);
 
-        if (!userResult.Success)
+        if (!logInRes.UserResult.Success)
         {
             logger.LogWarning("Login failed for email: {Email}. Errors: {Errors}",
-                request.Email, userResult.Errors);
+                request.Email, logInRes.UserResult.Errors);
 
-            return Unauthorized(ApiResponse<object>.FailResponse("Login failed", userResult.Errors));
+            return Unauthorized(ApiResponse<object>.FailResponse("Login failed", logInRes.UserResult.Errors));
         }
 
-        if (userResult.Requires2FA)
+        if (logInRes.UserResult.Requires2FA)
         {
             logger.LogInformation("Login requires 2FA for email: {Email}",
                 request.Email);
@@ -200,32 +200,20 @@ public class AuthController<TDbContext>(
             return Ok(ApiResponse<object>.FailResponse("2FA required"));
         }
 
-        var userData = await userQryService.GetClaims(request.Email);
-        var newRefreshTokenDto = refreshTokenService.GenerateRefreshToken(userData.user.Id);
+        AppendCookies(logInRes.NewRefreshTokenDto);
 
-        if (!await refreshTokenService.RefreshAsync(newRefreshTokenDto, cancellationToken))
-        {
-            logger.LogError("Failed to create refresh token for user {UserId}",
-                userData.user.Id);
-
-            return StatusCode(StatusCodes.Status500InternalServerError,
-                ApiResponse<object>.FailResponse("Failed to create refresh token"));
-        }
-
-        AppendCookies(newRefreshTokenDto);
-
-        logger.LogInformation("Login successful for email: {Email}, UserId: {UserId}", request.Email, userData.user.Id);
+        logger.LogInformation("Login successful for email: {Email}, UserId: {UserId}", request.Email, logInRes.UserData?.Id);
 
         return Ok(ApiResponse<object>.SuccessResponse(new
         {
             UserInfo = new
             {
-                userData.user.UserName,
-                userData.user.Email,
-                userData.user.FirstName,
-                userData.user.LastName,
+                logInRes.UserData?.UserName,
+                logInRes.UserData?.Email,
+                logInRes.UserData?.FirstName,
+                logInRes.UserData?.LastName,
             },
-            AccessToken = tokenService.GenerateAccessToken(userData.claims)
+            AccessToken = tokenService.GenerateAccessToken(logInRes.Claims)
         }, "Login successful"));
     }
 
