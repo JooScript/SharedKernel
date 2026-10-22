@@ -7,6 +7,8 @@ using SharedKernel.Bl.Contracts.Auth;
 using SharedKernel.Bl.Dtos.User;
 using SharedKernel.Da.Identity;
 using System.Text;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace SharedKernel.Api.Services;
 
@@ -31,12 +33,16 @@ namespace SharedKernel.Api.Services;
 /// <param name="logger">
 /// Logger for writing application log messages.
 /// </param>
-public abstract class BaseUserCmdService<AppUser>(
+public abstract class BaseUserCmdService<TDbContext, AppUser>(
     IEmailing emailSender,
+    IUserQry userQryService,
     UserManager<AppUser> userManager,
+    IUserSessionService<TDbContext> userSessionService,
+    IRefreshToken<TDbContext> refreshTokenService,
     SignInManager<AppUser> signInManager,
-    ILogger<BaseUserCmdService<AppUser>> logger) :
+    ILogger<BaseUserCmdService<TDbContext, AppUser>> logger) :
     IUserCmd
+    where TDbContext : DbContext
     where AppUser : SharedKernelAppUser, new()
 {
     /// <summary>
@@ -48,15 +54,15 @@ public abstract class BaseUserCmdService<AppUser>(
     /// <returns>
     /// A result describing whether registration succeeded.
     /// </returns>
-    public async Task<UserResultDto> RegisterAsync(RegisterDto dto)
+    public async Task<UserResultDto> RegisterAsync(RegisterDto dto, CancellationToken cancellationToken)
     {
         logger.LogInformation("user: Registering user '{Email}'.", dto?.Email);
 
         if (dto is null)
-            return Fail("Dto cannot be null");
+            return UserResultDto.Fail("Dto cannot be null");
 
         if (dto.Password != dto.ConfirmPassword)
-            return Fail("Passwords do not match.");
+            return UserResultDto.Fail("Passwords do not match.");
 
         var user = new AppUser
         {
@@ -74,7 +80,7 @@ public abstract class BaseUserCmdService<AppUser>(
             logger.LogWarning("user: Registration of '{Email}' failed: {Errors}",
                 dto.Email, string.Join("; ", result.Errors.Select(e => e.Description)));
 
-            return Fail(result.Errors.Select(e => e.Description).ToList());
+            return UserResultDto.Fail(result.Errors.Select(e => e.Description).ToList());
         }
 
         List<string> roles = dto.Roles.Any() ? new List<string> { SystemRoles.User } : dto.Roles;
@@ -88,7 +94,7 @@ public abstract class BaseUserCmdService<AppUser>(
                 logger.LogWarning("user: Assigning role '{Role}' to '{Email}' failed: {Errors}",
                     role, dto.Email, string.Join("; ", roleResult.Errors.Select(e => e.Description)));
 
-                return Fail(roleResult.Errors.Select(e => e.Description).ToList());
+                return UserResultDto.Fail(roleResult.Errors.Select(e => e.Description).ToList());
             }
         }
 
@@ -108,7 +114,7 @@ public abstract class BaseUserCmdService<AppUser>(
     /// <returns>
     /// A result describing whether the operation succeeded.
     /// </returns>
-    public async Task<UserResultDto> CreateAdminAsync(CreateUserDto dto)
+    public async Task<UserResultDto> CreateAdminAsync(CreateUserDto dto, CancellationToken cancellationToken)
     {
         logger.LogInformation("user: Creating admin user '{Email}'.", dto?.Email);
 
@@ -121,7 +127,7 @@ public abstract class BaseUserCmdService<AppUser>(
             Password = dto.Password,
             ConfirmPassword = dto.ConfirmPassword,
             Roles = new List<string> { SystemRoles.Admin }
-        });
+        }, cancellationToken);
     }
 
     /// <summary>
@@ -133,7 +139,7 @@ public abstract class BaseUserCmdService<AppUser>(
     /// <returns>
     /// A result describing whether the operation succeeded.
     /// </returns>
-    public async Task<UserResultDto> CreateUserAsync(CreateUserDto dto)
+    public async Task<UserResultDto> CreateUserAsync(CreateUserDto dto, CancellationToken cancellationToken)
     {
         logger.LogInformation("user: Creating user '{Email}'.", dto?.Email);
 
@@ -146,7 +152,7 @@ public abstract class BaseUserCmdService<AppUser>(
             Password = dto.Password,
             ConfirmPassword = dto.ConfirmPassword,
             Roles = new List<string> { SystemRoles.User }
-        });
+        }, cancellationToken);
     }
 
     /// <summary>
@@ -248,9 +254,14 @@ public abstract class BaseUserCmdService<AppUser>(
     /// <returns>
     /// A result describing whether authentication succeeded.
     /// </returns>
-    public async Task<UserResultDto> LogInAsync(LoginDto dto)
+    public async Task<LogInResultDto> LogInAsync(
+        LoginDto dto,
+        string UserAgent,
+        string IpAddress,
+        CancellationToken cancellationToken)
     {
         logger.LogInformation("user: Login attempt for '{Email}'.", dto?.Email);
+        ArgumentNullException.ThrowIfNull(dto, nameof(dto));
 
         AppUser? user = await userManager.FindByEmailAsync(dto.Email);
 
@@ -258,7 +269,7 @@ public abstract class BaseUserCmdService<AppUser>(
         {
             logger.LogWarning("user: Invalid login attempt for '{Email}'.", dto.Email);
 
-            return Fail("Invalid login.");
+            return LogInResultDto.Fail("Invalid login.");
         }
 
         if (!await userManager.IsEmailConfirmedAsync(user))
@@ -266,7 +277,7 @@ public abstract class BaseUserCmdService<AppUser>(
             logger.LogWarning("user: Login for '{Email}' blocked - email not confirmed.", dto.Email);
 
             await SendConfirmationEmail(user);
-            return Fail("Email not confirmed.");
+            return LogInResultDto.Fail("Email not confirmed.");
         }
 
         if (await userManager.GetTwoFactorEnabledAsync(user))
