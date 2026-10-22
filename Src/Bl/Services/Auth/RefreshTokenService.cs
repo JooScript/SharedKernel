@@ -28,7 +28,7 @@ public class RefreshTokenService<TDbContext>
         this.qryRepo = qryRepo;
     }
 
-    public async Task<bool> Refresh(RefreshTokenDto tokenDto, CancellationToken cancellationToken)
+    public async Task<bool> RefreshAsync(RefreshTokenDto tokenDto, CancellationToken cancellationToken)
     {
         try
         {

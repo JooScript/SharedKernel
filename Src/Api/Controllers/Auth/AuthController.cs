@@ -198,7 +198,7 @@ public class AuthController<TDbContext>(
         var userData = await userQryService.GetClaims(request.Email);
         var newRefreshTokenDto = refreshTokenService.GenerateRefreshToken(userData.user.Id);
 
-        await refreshTokenService.Refresh(newRefreshTokenDto);
+        await refreshTokenService.RefreshAsync(newRefreshTokenDto);
 
         AppendCookies(newRefreshTokenDto);
 
@@ -534,7 +534,7 @@ public class AuthController<TDbContext>(
 
         var newRefreshDto = refreshTokenService.GenerateRefreshToken(storedRefreshToken.UserId);
 
-        if (!await refreshTokenService.Refresh(newRefreshDto))
+        if (!await refreshTokenService.RefreshAsync(newRefreshDto))
             return StatusCode(StatusCodes.Status500InternalServerError, "Failed to refresh token.");
 
         AppendCookies(newRefreshDto);
