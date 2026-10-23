@@ -184,7 +184,10 @@ public class AuthController<TDbContext>(
 
         var logInRes = await userCmdService.LogInAsync(request, UserAgent, IpAddress, cancellationToken);
 
-        if (!logInRes.UserResult.Success)
+        if (!logInRes.UserResult.Success ||
+            logInRes.NewRefreshTokenDto == null ||
+            logInRes.Claims == null ||
+            logInRes.Claims.Length == 0)
         {
             logger.LogWarning("Login failed for email: {Email}. Errors: {Errors}",
                 request.Email, logInRes.UserResult.Errors);
