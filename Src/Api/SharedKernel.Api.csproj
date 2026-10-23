@@ -11,7 +11,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\..\ToolKits\CS_Utilities\Utils.csproj" />
 		<ProjectReference Include="..\Bl\SharedKernel.Bl.csproj" />
 	</ItemGroup>
 
