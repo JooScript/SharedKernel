@@ -1,0 +1,38 @@
+using Microsoft.Extensions.Logging.Abstractions;
+using SharedKernel.Da.Repos;
+using SharedKernel.Da.Test.Infrastructure;
+using static SharedKernel.Domains.Types.CurrentState;
+
+namespace SharedKernel.Da.Test.Repos;
+
+public partial class TableCmdRepoTests : IAsyncDisposable
+{
+    private readonly SharedKernelDaTestDbContext _context;
+    private readonly SharedKernelTableQryRepo<TestEntity, SharedKernelDaTestDbContext> _qryRepo;
+    private readonly SharedKernelTableCmdRepo<TestEntity, SharedKernelDaTestDbContext> _sut;
+
+    public TableCmdRepoTests()
+    {
+        _context = TestDbContextFactory.Create();
+        _qryRepo = new SharedKernelTableQryRepo<TestEntity, SharedKernelDaTestDbContext>(
+            _context,
+            NullLogger<SharedKernelTableQryRepo<TestEntity, SharedKernelDaTestDbContext>>.Instance);
+        _sut = new SharedKernelTableCmdRepo<TestEntity, SharedKernelDaTestDbContext>(
+            _context,
+            NullLogger<SharedKernelTableCmdRepo<TestEntity, SharedKernelDaTestDbContext>>.Instance,
+            _qryRepo);
+    }
+
+    public async ValueTask DisposeAsync() => await _context.DisposeAsync();
+
+    private async Task<TestEntity> SeedAsync(
+        Guid? id = null,
+        string name = "Entity",
+        int value = 1,
+        CurrentStateType state = CurrentStateType.Active)
+    {
+        var entity = TestData.CreateEntity(id, name, value, state);
+        await TestData.SeedAsync(_context, entity);
+        return entity;
+    }
+}
