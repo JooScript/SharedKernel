@@ -29,7 +29,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\..\ToolKits\CS_Utilities\Utils.csproj" />
+		<ProjectReference Include="..\..\..\ToolKits\CS_Utils\Src\Utils.csproj" />
 		<ProjectReference Include="..\Domains\SharedKernel.Domains.csproj" />
 	</ItemGroup>
 
