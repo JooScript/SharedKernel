@@ -11,6 +11,10 @@ public class UserSessionConfig<TUser>
 {
     public void Configure(EntityTypeBuilder<TbUserSession> builder)
     {
+        builder.Property(e => e.UserAgent)
+            .IsRequired()
+            .HasMaxLength(300);
+
         builder
             .HasOne<TUser>()
             .WithMany()
