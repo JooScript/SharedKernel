@@ -118,6 +118,8 @@ public abstract class BaseUserCmdService<TDbContext, AppUser>(
     {
         logger.LogInformation("user: Creating admin user '{Email}'.", dto?.Email);
 
+        ArgumentNullException.ThrowIfNull(dto, nameof(dto));
+
         return await RegisterAsync(new RegisterDto
         {
             Email = dto.Email,
@@ -142,6 +144,8 @@ public abstract class BaseUserCmdService<TDbContext, AppUser>(
     public async Task<UserResultDto> CreateUserAsync(CreateUserDto dto, CancellationToken cancellationToken)
     {
         logger.LogInformation("user: Creating user '{Email}'.", dto?.Email);
+
+        ArgumentNullException.ThrowIfNull(dto, nameof(dto));
 
         return await RegisterAsync(new RegisterDto
         {
@@ -494,6 +498,8 @@ public abstract class BaseUserCmdService<TDbContext, AppUser>(
     public async Task<bool> ResetPasswordAsync(ResetPasswordDto dto, CancellationToken cancellationToken)
     {
         logger.LogInformation("user: Resetting password for '{Email}'.", dto?.Email);
+
+        ArgumentNullException.ThrowIfNull(dto, nameof(dto));
 
         AppUser? user = await userManager.FindByEmailAsync(dto.Email);
 
