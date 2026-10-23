@@ -462,23 +462,23 @@ public class AuthController<TDbContext>(
             return Unauthorized(ApiResponse<object>.FailResponse("No refresh token found."));
         }
 
-        var storedRefreshToken = await refreshTokenService.GetByToken(refreshToken, cancellationToken);
+        var storedRefreshTokenDto = await refreshTokenService.GetByToken(refreshToken, cancellationToken);
 
         string? storedCsrfToken = Request.Headers[csrfTokenHeaderName].FirstOrDefault();
 
-        if (storedRefreshToken == null ||
-            storedRefreshToken.CurrentState == CurrentStateType.InActive ||
-            storedRefreshToken.CSRFToken.ToString() != storedCsrfToken ||
-            storedRefreshToken.Expires < DateTime.UtcNow)
+        if (storedRefreshTokenDto == null ||
+            storedRefreshTokenDto.CurrentState == CurrentStateType.InActive ||
+            storedRefreshTokenDto.CSRFToken.ToString() != storedCsrfToken ||
+            storedRefreshTokenDto.Expires < DateTime.UtcNow)
         {
-            logger.LogWarning("Refresh access token failed: invalid or expired refresh token. UserId: {UserId}", storedRefreshToken?.UserId);
+            logger.LogWarning("Refresh access token failed: invalid or expired refresh token. UserId: {UserId}", storedRefreshTokenDto?.UserId);
             return Unauthorized(ApiResponse<object>.FailResponse("Invalid or expired refresh token."));
         }
 
-        var claims = await userQryService.GetClaims(storedRefreshToken.UserId);
+        var claims = await userQryService.GetClaims(storedRefreshTokenDto.UserId);
         var newAccessToken = tokenService.GenerateAccessToken(claims.claims);
 
-        logger.LogInformation("Access token refreshed successfully for UserId: {UserId}", storedRefreshToken.UserId);
+        logger.LogInformation("Access token refreshed successfully for UserId: {UserId}", storedRefreshTokenDto.UserId);
         return Ok(ApiResponse<string>.SuccessResponse(newAccessToken, "Access token refreshed successfully."));
     }
 
@@ -616,10 +616,10 @@ public class AuthController<TDbContext>(
         SelectMany(v => v.Errors).
         Select(e => e.ErrorMessage);
 
-    protected string? UserAgent =>
+    protected string UserAgent =>
     HttpContext.Request.Headers.UserAgent.ToString();
 
-    protected string? IpAddress =>
+    protected string IpAddress =>
         HttpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString();
 
 }
