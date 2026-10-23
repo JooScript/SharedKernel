@@ -617,9 +617,9 @@ public class AuthController<TDbContext>(
         Select(e => e.ErrorMessage);
 
     protected string UserAgent =>
-    HttpContext.Request.Headers.UserAgent.ToString();
+        HttpContext.Request.Headers.UserAgent.ToString();
 
     protected string IpAddress =>
-        HttpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString();
+        HttpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString() ?? "Unknown";
 
 }
