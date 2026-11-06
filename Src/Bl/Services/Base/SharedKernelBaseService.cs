@@ -39,6 +39,8 @@ public abstract class SharedKernelBaseService<Tb, Dto, TDbContext>
 
     public abstract Tb ToEntity(Dto dto);
 
+    #region Qry
+
     public virtual async Task<List<Dto>> GetAllAsync(CancellationToken cancellationToken)
     {
         var entities = await qryRepo.GetAllAsync(cancellationToken);
@@ -69,6 +71,8 @@ public abstract class SharedKernelBaseService<Tb, Dto, TDbContext>
     {
         return new(true, string.Empty);
     }
+
+    #endregion
 
     #region Cmd
 
