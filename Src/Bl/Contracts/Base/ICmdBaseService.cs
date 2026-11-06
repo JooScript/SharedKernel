@@ -15,7 +15,7 @@ public interface ICmdBaseService<Dto> where Dto : class
     /// success - indicates if the operation succeeded
     /// id - the int of the newly created entity (valid when success is true)
     /// </returns>
-    Task<SaveResultType> AddAsync(Dto entity, CancellationToken cancellationToken = default);
+    Task<SaveResultType> AddAsync(Dto entity, CancellationToken cancellationToken);
 
     /// <summary>
     /// Updates an existing entity based on the provided DTO
@@ -24,7 +24,9 @@ public interface ICmdBaseService<Dto> where Dto : class
     /// <returns>
     /// Task representing the asynchronous operation with a boolean indicating success
     /// </returns>
-    Task<bool> UpdateAsync(Dto entity, CancellationToken cancellationToken = default);
+    Task<bool> UpdateAsync(Dto entity, CancellationToken cancellationToken);
+
+    Task<bool> DuplicateAsync(Guid id, CancellationToken cancellationToken);
 
     /// <summary>
     /// Changes the status of an entity
@@ -34,12 +36,12 @@ public interface ICmdBaseService<Dto> where Dto : class
     /// <returns>
     /// Task representing the asynchronous operation with a boolean indicating success
     /// </returns>
-    Task<bool> ActivateAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<bool> ActivateAsync(Guid id, CancellationToken cancellationToken);
 
-    Task<bool> DeactivateAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<bool> DeactivateAsync(Guid id, CancellationToken cancellationToken);
 
-    Task<bool> DeleteAsync(Guid id, DeleteType deleteType = DeleteType.HardDelete, CancellationToken cancellationToken = default);
+    Task<bool> DeleteAsync(Guid id, DeleteType deleteType, CancellationToken cancellationToken);
 
-    Task<bool> DeleteAsync(List<Guid> Ids, DeleteType deleteType = DeleteType.HardDelete, CancellationToken cancellationToken = default);
+    Task<bool> DeleteAsync(List<Guid> Ids, DeleteType deleteType, CancellationToken cancellationToken);
 
 }
