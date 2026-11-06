@@ -26,7 +26,7 @@ public interface ICmdBaseService<Dto> where Dto : class
     /// </returns>
     Task<bool> UpdateAsync(Dto entity, CancellationToken cancellationToken);
 
-    Task<bool> DuplicateAsync(Guid id, CancellationToken cancellationToken);
+    Task<SaveResultType> DuplicateAsync(Guid id, CancellationToken cancellationToken);
 
     /// <summary>
     /// Changes the status of an entity
