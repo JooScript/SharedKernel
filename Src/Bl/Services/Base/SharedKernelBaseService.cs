@@ -97,6 +97,16 @@ public abstract class SharedKernelBaseService<Tb, Dto, TDbContext>
         }
     }
 
+    public virtual async Task<SaveResultType> DuplicateAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var entity = await GetByIdAsync(id, cancellationToken);
+
+        if (entity == null)
+            return SaveResultType.Fail();
+
+        return await AddAsync(entity, cancellationToken);
+    }
+
     public async virtual Task<bool> UpdateAsync(Dto dto, CancellationToken cancellationToken)
     {
         var check = await CanUpdateAsync(dto, cancellationToken);
