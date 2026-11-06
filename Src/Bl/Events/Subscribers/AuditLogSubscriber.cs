@@ -50,7 +50,7 @@ public class AuditLogSubscriber<TDbContext>(IAuditLog<TDbContext> auditLog)
 
         if (dto != null)
         {
-            auditLog.AddAsync(dto).GetAwaiter().GetResult();
+            auditLog.AddAsync(dto, CancellationToken.None).GetAwaiter().GetResult();
         }
 
     }
