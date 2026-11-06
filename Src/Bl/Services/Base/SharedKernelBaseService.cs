@@ -35,9 +35,13 @@ public abstract class SharedKernelBaseService<Tb, Dto, TDbContext>
         this.userQry = userQry;
     }
 
+    #region Abstract Methods
+
     public abstract Dto ToDto(Tb entity);
 
     public abstract Tb ToEntity(Dto dto);
+
+    #endregion
 
     #region Qry
 
