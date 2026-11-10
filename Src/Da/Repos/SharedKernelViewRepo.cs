@@ -11,13 +11,13 @@ namespace SharedKernel.Da.Repos;
 public class SharedKernelViewRepo<Vw, TDbContext>(
     TDbContext context,
     ILogger<SharedKernelViewRepo<Vw, TDbContext>> logger)
-    : ISharedKernelViewRepo<Vw>
+    : ISharedKernelViewRepo<Vw, TDbContext>
     where Vw : class
     where TDbContext : DbContext
 {
     protected readonly DbSet<Vw> vwSet = (context ?? throw new ArgumentNullException(nameof(context))).Set<Vw>();
 
-    public virtual async Task<IReadOnlyList<Vw>> GetAllAsync(CancellationToken cancellationToken)
+    public virtual async Task<IEnumerable<Vw>> GetAllAsync(CancellationToken cancellationToken)
     {
         try
         {
@@ -59,7 +59,7 @@ public class SharedKernelViewRepo<Vw, TDbContext>(
         }
     }
 
-    public virtual async Task<IReadOnlyList<Vw>> GetListAsync(Expression<Func<Vw, bool>> filter, CancellationToken cancellationToken)
+    public virtual async Task<IEnumerable<Vw>> GetListAsync(Expression<Func<Vw, bool>> filter, CancellationToken cancellationToken)
     {
         if (filter == null)
         {
@@ -77,10 +77,10 @@ public class SharedKernelViewRepo<Vw, TDbContext>(
         }
     }
 
-    public virtual async Task<IReadOnlyList<Vw>> FindAsync(Expression<Func<Vw, bool>> filter, CancellationToken cancellationToken)
+    public virtual async Task<IEnumerable<Vw>> FindAsync(Expression<Func<Vw, bool>> filter, CancellationToken cancellationToken)
         => await GetListAsync(filter, cancellationToken);
 
-    public virtual async Task<IReadOnlyList<TResult>> GetListAsync<TResult>(
+    public virtual async Task<IEnumerable<TResult>> GetListAsync<TResult>(
         Expression<Func<Vw, bool>>? filter,
         Expression<Func<Vw, TResult>>? selector,
         Expression<Func<Vw, object>>? orderBy,
