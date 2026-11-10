@@ -328,4 +328,13 @@ public class SharedKernelTableQryRepo<Tb, TDbContext>(
         CancellationToken cancellationToken)
         => await IsExistsAsync(x => x.Id == Id, cancellationToken);
 
+    public virtual async Task<IEnumerable<Tb>> GetListAsync(
+        Expression<Func<Tb, bool>> filter,
+        CancellationToken cancellationToken)
+        => await GetListAsync<Tb>(
+            filter,
+            null,
+            null,
+            false,
+            cancellationToken);
 }
