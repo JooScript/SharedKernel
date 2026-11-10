@@ -15,7 +15,7 @@ public interface ISharedKernelQueryRepo<T> where T : class
 
     Task<T?> GetFirstOrDefaultAsync(Expression<Func<T, bool>> filter, CancellationToken cancellationToken);
 
-    Task<IReadOnlyList<T>> GetListAsync(Expression<Func<T, bool>> filter, CancellationToken cancellationToken);
+    Task<IEnumerable<T>> GetListAsync(Expression<Func<T, bool>> filter, CancellationToken cancellationToken);
 
     Task<bool> IsExistsAsync(Expression<Func<T, bool>> filter, CancellationToken cancellationToken);
 
