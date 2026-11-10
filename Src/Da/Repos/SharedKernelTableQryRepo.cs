@@ -17,7 +17,7 @@ public class SharedKernelTableQryRepo<Tb, TDbContext>(
 {
     protected readonly DbSet<Tb> tbDbSet = (context ?? throw new ArgumentNullException(nameof(context))).Set<Tb>();
 
-    public async Task<Tb?> GetTrackedOrLoadAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<Tb?> GetTrackedOrLoadAsync(Guid id, CancellationToken cancellationToken)
     {
         try
         {
@@ -33,7 +33,7 @@ public class SharedKernelTableQryRepo<Tb, TDbContext>(
         }
     }
 
-    public virtual async Task<Tb?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public virtual async Task<Tb?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
         try
         {
@@ -48,7 +48,7 @@ public class SharedKernelTableQryRepo<Tb, TDbContext>(
     public virtual async Task<TResult?> GetByIdAsync<TResult>(
     Guid id,
     Expression<Func<Tb, TResult>> selector,
-    CancellationToken cancellationToken = default,
+    CancellationToken cancellationToken,
     params Expression<Func<Tb, object>>[] includes)
     {
         try
@@ -73,7 +73,7 @@ public class SharedKernelTableQryRepo<Tb, TDbContext>(
 
     public virtual async Task<IEnumerable<Tb>> GetByIdsAsync(
         IEnumerable<Guid> ids,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         if (ids == null)
         {
@@ -98,7 +98,7 @@ public class SharedKernelTableQryRepo<Tb, TDbContext>(
 
     public virtual async Task<IEnumerable<Tb>> FindAsync(
         Expression<Func<Tb, bool>> filter,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         if (filter == null)
         {
@@ -264,7 +264,7 @@ public class SharedKernelTableQryRepo<Tb, TDbContext>(
         }
     }
 
-    public virtual async Task<IEnumerable<Tb>> GetAllAsync(CancellationToken cancellationToken = default)
+    public virtual async Task<IEnumerable<Tb>> GetAllAsync(CancellationToken cancellationToken)
     {
         try
         {
@@ -278,7 +278,7 @@ public class SharedKernelTableQryRepo<Tb, TDbContext>(
 
     public virtual async Task<Tb?> GetFirstOrDefaultAsync(
         Expression<Func<Tb, bool>> filter,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -291,8 +291,8 @@ public class SharedKernelTableQryRepo<Tb, TDbContext>(
     }
 
     public virtual async Task<int> CountAsync(
-        Expression<Func<Tb, bool>>? filter = null,
-        CancellationToken cancellationToken = default)
+        Expression<Func<Tb, bool>>? filter,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -311,7 +311,7 @@ public class SharedKernelTableQryRepo<Tb, TDbContext>(
 
     public virtual async Task<bool> IsExistsAsync(
         Expression<Func<Tb, bool>> filter,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -325,7 +325,7 @@ public class SharedKernelTableQryRepo<Tb, TDbContext>(
 
     public virtual async Task<bool> IsExistsAsync(
         Guid Id,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
         => await IsExistsAsync(x => x.Id == Id, cancellationToken);
 
 }
