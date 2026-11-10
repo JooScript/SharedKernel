@@ -1,4 +1,7 @@
-﻿namespace SharedKernel.Da.Contracts;
+﻿using Microsoft.EntityFrameworkCore;
 
-public interface ISharedKernelViewRepo<Vw> : ISharedKernelQueryRepo<Vw>
-    where Vw : class;
+namespace SharedKernel.Da.Contracts;
+
+public interface ISharedKernelViewRepo<Vw, TDbContext> : ISharedKernelQueryRepo<Vw>
+    where Vw : class
+    where TDbContext : DbContext;
