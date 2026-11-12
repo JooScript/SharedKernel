@@ -108,6 +108,7 @@ public class SharedKernelQueryRepo<T, TDbContext>(TDbContext context) :
             int totalCount = await query.CountAsync(cancellationToken);
 
             query = isDescending ? query.OrderByDescending(orderBy) : query.OrderBy(orderBy);
+
             query = query.Skip((pageNumber - 1) * pageSize).Take(pageSize);
 
             List<TResult> items = await Project(query, selector).ToListAsync(cancellationToken);
