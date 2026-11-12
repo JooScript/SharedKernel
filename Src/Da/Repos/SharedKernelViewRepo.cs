@@ -7,7 +7,7 @@ namespace SharedKernel.Da.Repos;
 public class SharedKernelViewRepo<Vw, TDbContext>(
     TDbContext context,
     ILogger<SharedKernelViewRepo<Vw, TDbContext>> logger) :
-    SharedKernelQueryRepo<Vw, TDbContext>(context),
+    SharedKernelQueryRepo<Vw, TDbContext>(context, logger),
     ISharedKernelViewRepo<Vw, TDbContext>
     where Vw : class
     where TDbContext : DbContext;
