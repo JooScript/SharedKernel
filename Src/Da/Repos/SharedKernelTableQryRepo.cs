@@ -1,8 +1,6 @@
-﻿using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SharedKernel.Da.Contracts;
-using SharedKernel.Da.Contracts.Models;
 using SharedKernel.Da.Exceptions;
 using System.Linq.Expressions;
 
