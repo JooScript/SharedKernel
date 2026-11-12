@@ -34,7 +34,9 @@ public class IdempotencyMiddleware(IMemoryCache cache) : IMiddleware
     {
         if (context.Request.Headers.TryGetValue("Idempotency-Key", out var key))
         {
-            if (cache.TryGetValue(key, out var response))
+            var cacheKey = key.ToString();
+
+            if (cache.TryGetValue(cacheKey, out var response))
             {
                 context.Response.ContentType = "application/json";
 
@@ -59,11 +61,13 @@ public class IdempotencyMiddleware(IMemoryCache cache) : IMiddleware
 
             context.Response.Body.Seek(0, SeekOrigin.Begin);
 
-            var text = await new StreamReader(context.Response.Body).ReadToEndAsync();
+            var text = await new StreamReader(context.Response.Body, leaveOpen: true).ReadToEndAsync();
 
-            cache.Set(key.ToString(), text, TimeSpan.FromMinutes(5));
+            cache.Set(cacheKey, text, TimeSpan.FromMinutes(5));
 
             context.Response.Body.Seek(0, SeekOrigin.Begin);
+
+            context.Response.Body = originalBodyStream;
 
             await responseBody.CopyToAsync(originalBodyStream);
         }
