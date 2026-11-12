@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 
 namespace SharedKernel.Da.Contracts;
 
-public interface ISharedKernelTableQryRepo<T, TDbContext> : ISharedKernelQueryRepo<T, TDbContext>
+public interface ISharedKernelTableQryRepo<T, TDbContext> : ISharedKernelQueryRepo<T>
     where T : SharedKernelBaseTable
     where TDbContext : DbContext
 {
