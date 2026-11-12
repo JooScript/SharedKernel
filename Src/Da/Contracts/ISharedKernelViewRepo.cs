@@ -2,6 +2,6 @@
 
 namespace SharedKernel.Da.Contracts;
 
-public interface ISharedKernelViewRepo<Vw, TDbContext> : ISharedKernelQueryRepo<Vw, TDbContext>
+public interface ISharedKernelViewRepo<Vw, TDbContext> : ISharedKernelQueryRepo<Vw>
     where Vw : class
     where TDbContext : DbContext;
