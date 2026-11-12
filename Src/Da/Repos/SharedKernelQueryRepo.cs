@@ -78,19 +78,7 @@ public class SharedKernelQueryRepo<T, TDbContext>(TDbContext context) :
     public virtual async Task<T?> GetFirstOrDefaultAsync(
         Expression<Func<T, bool>>? filter,
         CancellationToken cancellationToken)
-    {
-        if (filter == null)
-            throw new ArgumentNullException(nameof(filter));
-
-        try
-        {
-            return await dbSet.Where(filter).AsNoTracking().FirstOrDefaultAsync(cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            throw new DataAccessException(ex, $"Failed to retrieve first matching item of type {typeof(T).Name}");
-        }
-    }
+        => await GetFirstOrDefaultAsync<T>(filter, null, cancellationToken);
 
     public virtual async Task<PagedResult<TResult>> GetPagedListAsync<TResult>(int pageNumber,
         int pageSize, Expression<Func<T, bool>>? filter,
