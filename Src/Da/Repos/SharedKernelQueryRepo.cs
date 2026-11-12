@@ -96,8 +96,7 @@ public class SharedKernelQueryRepo<T, TDbContext>(TDbContext context) :
         if (pageSize < 1)
             throw new ArgumentOutOfRangeException(nameof(pageSize), "Page size must be greater than 0");
 
-        if (orderBy == null)
-            throw new ArgumentNullException(nameof(orderBy), "Order by is required for pagination");
+        orderBy ??= BuildDefaultOrderBy();
 
         EnsureSelectorOrSameType(selector);
 
@@ -194,6 +193,18 @@ public class SharedKernelQueryRepo<T, TDbContext>(TDbContext context) :
 
     // With no selector, TResult must be T itself. Query.Cast<TResult>() on an
     // unrelated type would fail at translation time, so we fail early instead.
+    private static Expression<Func<T, object>> BuildDefaultOrderBy()
+    {
+        var idProperty = typeof(T).GetProperty("Id")
+            ?? throw new InvalidOperationException("Order by is required for pagination");
+
+        var parameter = Expression.Parameter(typeof(T), "x");
+        var property = Expression.Property(parameter, idProperty);
+        var converted = Expression.Convert(property, typeof(object));
+
+        return Expression.Lambda<Func<T, object>>(converted, parameter);
+    }
+
     private static void EnsureSelectorOrSameType<TResult>(Expression<Func<T, TResult>>? selector)
     {
         if (selector == null && typeof(TResult) != typeof(T))
