@@ -178,6 +178,6 @@ public class ErrorHandlingMiddleware(ILogger<ErrorHandlingMiddleware> logger) : 
             WriteIndented = false
         };
 
-        await context.Response.WriteAsJsonAsync(problemDetails, options);
+        await context.Response.WriteAsJsonAsync(problemDetails, options, "application/problem+json");
     }
 }
