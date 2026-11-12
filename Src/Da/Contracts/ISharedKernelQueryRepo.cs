@@ -3,21 +3,12 @@ using System.Linq.Expressions;
 
 namespace SharedKernel.Da.Contracts;
 
-public interface ISharedKernelQueryRepo<T> where T : class
+public interface ISharedKernelQueryRepo<T>
+    where T : class
 {
-    Task<int> CountAsync(Expression<Func<T, bool>>? filter, CancellationToken cancellationToken);
+    Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>>? filter, CancellationToken cancellationToken);
 
-    Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> filter, CancellationToken cancellationToken);
-
-    Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken);
-
-    Task<T?> GetFirstOrDefaultAsync(Expression<Func<T, bool>> filter, CancellationToken cancellationToken);
-
-    Task<IEnumerable<T>> GetListAsync(Expression<Func<T, bool>> filter, CancellationToken cancellationToken);
-
-    Task<bool> IsExistsAsync(Expression<Func<T, bool>> filter, CancellationToken cancellationToken);
-
-    Task<IEnumerable<TResult>> GetListAsync<TResult>(
+    Task<IEnumerable<TResult>> FindAsync<TResult>(
         Expression<Func<T, bool>>? filter,
         Expression<Func<T, TResult>>? selector,
         Expression<Func<T, object>>? orderBy,
@@ -31,16 +22,15 @@ public interface ISharedKernelQueryRepo<T> where T : class
         Expression<Func<T, bool>>? filter,
         Expression<Func<T, TResult>>? selector,
         Expression<Func<T, object>>? orderBy,
-        bool isDescending,
-        CancellationToken cancellationToken,
+        bool isDescending, CancellationToken cancellationToken,
         params Expression<Func<T, object>>[] includes);
 
-    Task<IEnumerable<TResult>> FindAsync<TResult>(
-        Expression<Func<T, bool>>? filter,
-        Expression<Func<T, TResult>>? selector,
-        Expression<Func<T, object>>? orderBy,
-        bool isDescending,
-        CancellationToken cancellationToken,
-        params Expression<Func<T, object>>[] includes);
+    Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken);
+
+    Task<T?> GetFirstOrDefaultAsync(Expression<Func<T, bool>>? filter, CancellationToken cancellationToken);
+
+    Task<bool> IsExistsAsync(Expression<Func<T, bool>>? filter, CancellationToken cancellationToken);
+
+    Task<int> CountAsync(Expression<Func<T, bool>>? filter, CancellationToken cancellationToken);
 
 }
