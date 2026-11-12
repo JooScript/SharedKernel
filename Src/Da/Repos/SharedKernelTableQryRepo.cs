@@ -9,7 +9,7 @@ namespace SharedKernel.Da.Repos;
 public class SharedKernelTableQryRepo<Tb, TDbContext>(
     TDbContext context,
     ILogger<SharedKernelTableQryRepo<Tb, TDbContext>> logger) :
-    SharedKernelQueryRepo<Tb, TDbContext>(context),
+    SharedKernelQueryRepo<Tb, TDbContext>(context, logger),
     ISharedKernelTableQryRepo<Tb, TDbContext>
     where Tb : SharedKernelBaseTable
     where TDbContext : DbContext
