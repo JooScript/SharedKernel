@@ -29,18 +29,6 @@ public class SharedKernelViewRepo<Vw, TDbContext>(
         }
     }
 
-    public virtual async Task<Vw?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
-    {
-        try
-        {
-            return await vwSet.FindAsync(new object[] { id }, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            throw new DataAccessException(ex, $"Failed to retrieve item of type {typeof(Vw).Name} with ID {id}");
-        }
-    }
-
     public virtual async Task<Vw?> GetFirstOrDefaultAsync(Expression<Func<Vw, bool>> filter, CancellationToken cancellationToken)
     {
         if (filter == null)
