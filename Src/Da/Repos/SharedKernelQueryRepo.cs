@@ -80,8 +80,10 @@ public class SharedKernelQueryRepo<T, TDbContext>(TDbContext context) :
         CancellationToken cancellationToken)
         => await GetFirstOrDefaultAsync<T>(filter, null, cancellationToken);
 
-    public virtual async Task<PagedResult<TResult>> GetPagedListAsync<TResult>(int pageNumber,
-        int pageSize, Expression<Func<T, bool>>? filter,
+    public virtual async Task<PagedResult<TResult>> GetPagedListAsync<TResult>(
+        int pageNumber,
+        int pageSize,
+        Expression<Func<T, bool>>? filter,
         Expression<Func<T, TResult>>? selector,
         Expression<Func<T, object>>? orderBy,
         bool isDescending,
@@ -97,7 +99,7 @@ public class SharedKernelQueryRepo<T, TDbContext>(TDbContext context) :
         if (orderBy == null)
             throw new ArgumentNullException(nameof(orderBy), "Order by is required for pagination");
 
-        EnsureSelectorOrSameType<TResult>(selector);
+        EnsureSelectorOrSameType(selector);
 
         try
         {
