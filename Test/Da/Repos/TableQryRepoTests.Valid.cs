@@ -10,7 +10,7 @@ public partial class TableQryRepoTests
     {
         var entity = await SeedAsync(name: "First");
 
-        var result = await _sut.GetByIdAsync(entity.Id);
+        var result = await _sut.GetByIdAsync(entity.Id, e => e, CancellationToken.None);
 
         Assert.NotNull(result);
         Assert.Equal(entity.Id, result!.Id);
@@ -20,7 +20,7 @@ public partial class TableQryRepoTests
     [Fact]
     public async Task GetByIdAsync_WhenEntityMissing_ReturnsNull()
     {
-        var result = await _sut.GetByIdAsync(Guid.NewGuid());
+        var result = await _sut.GetByIdAsync(Guid.NewGuid(), e => e, CancellationToken.None);
 
         Assert.Null(result);
     }
@@ -30,7 +30,7 @@ public partial class TableQryRepoTests
     {
         var entity = await SeedAsync(name: "Projected");
 
-        var result = await _sut.GetByIdAsync(entity.Id, e => e.Name);
+        var result = await _sut.GetByIdAsync(entity.Id, e => e.Name, CancellationToken.None);
 
         Assert.Equal("Projected", result);
     }
@@ -38,7 +38,7 @@ public partial class TableQryRepoTests
     [Fact]
     public async Task GetByIdAsync_WithSelector_WhenMissing_ReturnsDefault()
     {
-        var result = await _sut.GetByIdAsync(Guid.NewGuid(), e => e.Name);
+        var result = await _sut.GetByIdAsync(Guid.NewGuid(), e => e.Name, CancellationToken.None);
 
         Assert.Null(result);
     }
@@ -50,7 +50,7 @@ public partial class TableQryRepoTests
         var second = await SeedAsync();
         await SeedAsync();
 
-        var result = (await _sut.GetByIdsAsync(new[] { first.Id, second.Id })).ToList();
+        var result = (await _sut.GetByIdsAsync(new[] { first.Id, second.Id }, CancellationToken.None)).ToList();
 
         Assert.Equal(2, result.Count);
         Assert.Contains(result, x => x.Id == first.Id);
@@ -62,7 +62,7 @@ public partial class TableQryRepoTests
     {
         await SeedAsync();
 
-        var result = await _sut.GetByIdsAsync(Array.Empty<Guid>());
+        var result = await _sut.GetByIdsAsync(Array.Empty<Guid>(), CancellationToken.None);
 
         Assert.Empty(result);
     }
@@ -72,7 +72,7 @@ public partial class TableQryRepoTests
     {
         var entity = await SeedAsync(value: 42);
 
-        var result = (await _sut.FindAsync(e => e.Value == 42)).ToList();
+        var result = (await _sut.FindAsync(e => e.Value == 42, CancellationToken.None)).ToList();
 
         Assert.Single(result);
         Assert.Equal(entity.Id, result[0].Id);
@@ -100,7 +100,7 @@ public partial class TableQryRepoTests
         await SeedAsync(value: 1);
         var target = await SeedAsync(value: 99);
 
-        var result = await _sut.GetFirstOrDefaultAsync(e => e.Value == 99);
+        var result = await _sut.GetFirstOrDefaultAsync(e => e.Value == 99, e => e, CancellationToken.None);
 
         Assert.NotNull(result);
         Assert.Equal(target.Id, result!.Id);
@@ -109,7 +109,7 @@ public partial class TableQryRepoTests
     [Fact]
     public async Task GetFirstOrDefaultAsync_WhenMissing_ReturnsNull()
     {
-        var result = await _sut.GetFirstOrDefaultAsync(e => e.Value == 12345);
+        var result = await _sut.GetFirstOrDefaultAsync(e => e.Value == 12345, e => e, CancellationToken.None);
 
         Assert.Null(result);
     }
@@ -119,7 +119,7 @@ public partial class TableQryRepoTests
     {
         var entity = await SeedAsync();
 
-        var result = await _sut.GetTrackedOrLoadAsync(entity.Id);
+        var result = await _sut.GetTrackedOrLoadAsync(entity.Id, CancellationToken.None);
 
         Assert.Same(entity, result);
     }
@@ -130,24 +130,25 @@ public partial class TableQryRepoTests
         var entity = await SeedAsync();
         _context.ChangeTracker.Clear();
 
-        var result = await _sut.GetTrackedOrLoadAsync(entity.Id);
+        var result = await _sut.GetTrackedOrLoadAsync(entity.Id, CancellationToken.None);
 
         Assert.NotNull(result);
         Assert.Equal(entity.Id, result!.Id);
     }
 
     [Fact]
-    public async Task GetAllAsync_ExcludesDeletedEntities()
+    public async Task GetAllAsync_ReturnsAllEntities()
     {
         var active = await SeedAsync();
         var inactive = await SeedAsync(state: CurrentStateType.InActive);
-        await SeedAsync(state: CurrentStateType.Deleted);
+        var deleted = await SeedAsync(state: CurrentStateType.Deleted);
 
-        var result = (await _sut.GetAllAsync()).ToList();
+        var result = (await _sut.GetAllAsync(CancellationToken.None)).ToList();
 
-        Assert.Equal(2, result.Count);
+        Assert.Equal(3, result.Count);
         Assert.Contains(result, x => x.Id == active.Id);
         Assert.Contains(result, x => x.Id == inactive.Id);
+        Assert.Contains(result, x => x.Id == deleted.Id);
     }
 
     [Fact]
@@ -242,6 +243,10 @@ public partial class TableQryRepoTests
         var result = await _sut.GetPagedListAsync<TestEntity>(
             pageNumber: 2,
             pageSize: 2,
+            filter: null,
+            selector: null,
+            orderBy: null,
+            isDescending: false,
             cancellationToken: CancellationToken.None);
 
         Assert.Equal(2, result.Items.Count);
@@ -264,6 +269,9 @@ public partial class TableQryRepoTests
             pageNumber: 1,
             pageSize: 10,
             filter: e => e.Value == target.Value,
+            selector: null,
+            orderBy: null,
+            isDescending: false,
             cancellationToken: CancellationToken.None);
 
         Assert.Single(result.Items);
@@ -280,6 +288,8 @@ public partial class TableQryRepoTests
         var result = await _sut.GetPagedListAsync<TestEntity>(
             pageNumber: 1,
             pageSize: 10,
+            filter: null,
+            selector: null,
             orderBy: e => e.Value,
             isDescending: true,
             cancellationToken: CancellationToken.None);
@@ -296,8 +306,10 @@ public partial class TableQryRepoTests
         var result = await _sut.GetPagedListAsync<int>(
             pageNumber: 1,
             pageSize: 10,
+            filter: null,
             selector: e => e.Value,
             orderBy: e => e.Value,
+            isDescending: false,
             cancellationToken: CancellationToken.None);
 
         Assert.Equal(new[] { 1, 2 }, result.Items);

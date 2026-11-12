@@ -12,10 +12,14 @@ public partial class TableQryRepoTests
     }
 
     [Fact]
-    public async Task FindAsync_WhenFilterNull_ThrowsArgumentNullException()
+    public async Task FindAsync_WhenFilterNull_ReturnsAllEntities()
     {
-        await Assert.ThrowsAsync<ArgumentNullException>(
-            () => _sut.FindAsync(null!, CancellationToken.None));
+        await SeedAsync();
+        await SeedAsync();
+
+        var result = await _sut.FindAsync(null, CancellationToken.None);
+
+        Assert.Equal(2, result.Count());
     }
 
     [Theory]
@@ -27,6 +31,10 @@ public partial class TableQryRepoTests
             () => _sut.GetPagedListAsync<TestEntity>(
                 pageNumber,
                 pageSize: 10,
+                filter: null,
+                selector: null,
+                orderBy: null,
+                isDescending: false,
                 cancellationToken: CancellationToken.None));
     }
 
@@ -39,6 +47,10 @@ public partial class TableQryRepoTests
             () => _sut.GetPagedListAsync<TestEntity>(
                 pageNumber: 1,
                 pageSize,
+                filter: null,
+                selector: null,
+                orderBy: null,
+                isDescending: false,
                 cancellationToken: CancellationToken.None));
     }
 }

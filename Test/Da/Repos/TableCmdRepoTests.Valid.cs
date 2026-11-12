@@ -61,7 +61,7 @@ public partial class TableCmdRepoTests
         Assert.True(result);
         _context.ChangeTracker.Clear();
 
-        var reloaded = await _qryRepo.GetByIdAsync(existing.Id);
+        var reloaded = await _qryRepo.GetByIdAsync(existing.Id, e => e, CancellationToken.None);
         Assert.NotNull(reloaded);
         Assert.Equal("After", reloaded!.Name);
         Assert.Equal(99, reloaded.Value);
@@ -85,8 +85,8 @@ public partial class TableCmdRepoTests
         Assert.True(result);
         _context.ChangeTracker.Clear();
 
-        Assert.Equal("First Updated", (await _qryRepo.GetByIdAsync(first.Id))!.Name);
-        Assert.Equal("Second Updated", (await _qryRepo.GetByIdAsync(second.Id))!.Name);
+        Assert.Equal("First Updated", (await _qryRepo.GetByIdAsync(first.Id, e => e, CancellationToken.None))!.Name);
+        Assert.Equal("Second Updated", (await _qryRepo.GetByIdAsync(second.Id, e => e, CancellationToken.None))!.Name);
         Assert.NotEqual(default, firstUpdate.UpdatedAt);
         Assert.NotEqual(default, secondUpdate.UpdatedAt);
     }
@@ -114,7 +114,7 @@ public partial class TableCmdRepoTests
         Assert.True(result);
         _context.ChangeTracker.Clear();
 
-        var reloaded = await _qryRepo.GetByIdAsync(entity.Id);
+        var reloaded = await _qryRepo.GetByIdAsync(entity.Id, e => e, CancellationToken.None);
         Assert.Equal(CurrentStateType.InActive, reloaded!.CurrentState);
         Assert.Equal(userId, reloaded.UpdatedBy);
         Assert.NotNull(reloaded.UpdatedAt);
@@ -136,8 +136,8 @@ public partial class TableCmdRepoTests
         Assert.True(result);
         _context.ChangeTracker.Clear();
 
-        Assert.Equal(CurrentStateType.InActive, (await _qryRepo.GetByIdAsync(first.Id))!.CurrentState);
-        Assert.Equal(CurrentStateType.InActive, (await _qryRepo.GetByIdAsync(second.Id))!.CurrentState);
+        Assert.Equal(CurrentStateType.InActive, (await _qryRepo.GetByIdAsync(first.Id, e => e, CancellationToken.None))!.CurrentState);
+        Assert.Equal(CurrentStateType.InActive, (await _qryRepo.GetByIdAsync(second.Id, e => e, CancellationToken.None))!.CurrentState);
     }
 
     [Fact]
@@ -161,7 +161,7 @@ public partial class TableCmdRepoTests
 
         Assert.True(result);
         _context.ChangeTracker.Clear();
-        Assert.Equal(CurrentStateType.Active, (await _qryRepo.GetByIdAsync(entity.Id))!.CurrentState);
+        Assert.Equal(CurrentStateType.Active, (await _qryRepo.GetByIdAsync(entity.Id, e => e, CancellationToken.None))!.CurrentState);
     }
 
     [Fact]
@@ -173,7 +173,7 @@ public partial class TableCmdRepoTests
 
         Assert.True(result);
         _context.ChangeTracker.Clear();
-        Assert.Equal(CurrentStateType.InActive, (await _qryRepo.GetByIdAsync(entity.Id))!.CurrentState);
+        Assert.Equal(CurrentStateType.InActive, (await _qryRepo.GetByIdAsync(entity.Id, e => e, CancellationToken.None))!.CurrentState);
     }
 
     [Fact]
@@ -185,7 +185,7 @@ public partial class TableCmdRepoTests
 
         Assert.True(result);
         _context.ChangeTracker.Clear();
-        Assert.Equal(CurrentStateType.Deleted, (await _qryRepo.GetByIdAsync(entity.Id))!.CurrentState);
+        Assert.Equal(CurrentStateType.Deleted, (await _qryRepo.GetByIdAsync(entity.Id, e => e, CancellationToken.None))!.CurrentState);
     }
 
     [Fact]
@@ -201,8 +201,8 @@ public partial class TableCmdRepoTests
 
         Assert.True(result);
         _context.ChangeTracker.Clear();
-        Assert.Equal(CurrentStateType.Deleted, (await _qryRepo.GetByIdAsync(first.Id))!.CurrentState);
-        Assert.Equal(CurrentStateType.Deleted, (await _qryRepo.GetByIdAsync(second.Id))!.CurrentState);
+        Assert.Equal(CurrentStateType.Deleted, (await _qryRepo.GetByIdAsync(first.Id, e => e, CancellationToken.None))!.CurrentState);
+        Assert.Equal(CurrentStateType.Deleted, (await _qryRepo.GetByIdAsync(second.Id, e => e, CancellationToken.None))!.CurrentState);
     }
 
     [Fact]
@@ -214,7 +214,7 @@ public partial class TableCmdRepoTests
 
         Assert.True(result);
         _context.ChangeTracker.Clear();
-        Assert.Null(await _qryRepo.GetByIdAsync(entity.Id));
+        Assert.Null(await _qryRepo.GetByIdAsync(entity.Id, e => e, CancellationToken.None));
     }
 
     [Fact]

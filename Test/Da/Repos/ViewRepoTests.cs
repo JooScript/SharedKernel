@@ -42,7 +42,7 @@ public class ViewRepoTests : IAsyncDisposable
     {
         var view = await SeedAsync(name: "Target");
 
-        var result = await _sut.GetFirstOrDefaultAsync(v => v.Id == view.Id, CancellationToken.None);
+        var result = await _sut.GetFirstOrDefaultAsync(v => v.Id == view.Id, v => v, CancellationToken.None);
 
         Assert.NotNull(result);
         Assert.Equal("Target", result!.Name);
@@ -51,7 +51,7 @@ public class ViewRepoTests : IAsyncDisposable
     [Fact]
     public async Task GetFirstOrDefaultAsync_WhenIdMissing_ReturnsNull()
     {
-        var result = await _sut.GetFirstOrDefaultAsync(v => v.Id == Guid.NewGuid(), CancellationToken.None);
+        var result = await _sut.GetFirstOrDefaultAsync(v => v.Id == Guid.NewGuid(), v => v, CancellationToken.None);
 
         Assert.Null(result);
     }
@@ -62,7 +62,7 @@ public class ViewRepoTests : IAsyncDisposable
         await SeedAsync(value: 1);
         var target = await SeedAsync(value: 10);
 
-        var result = await _sut.GetFirstOrDefaultAsync(v => v.Value == 10, CancellationToken.None);
+        var result = await _sut.GetFirstOrDefaultAsync(v => v.Value == 10, v => v, CancellationToken.None);
 
         Assert.NotNull(result);
         Assert.Equal(target.Id, result!.Id);
@@ -71,7 +71,7 @@ public class ViewRepoTests : IAsyncDisposable
     [Fact]
     public async Task GetFirstOrDefaultAsync_WhenMissing_ReturnsNull()
     {
-        var result = await _sut.GetFirstOrDefaultAsync(v => v.Value == 404, CancellationToken.None);
+        var result = await _sut.GetFirstOrDefaultAsync(v => v.Value == 404, v => v, CancellationToken.None);
 
         Assert.Null(result);
     }
@@ -80,7 +80,7 @@ public class ViewRepoTests : IAsyncDisposable
     public async Task GetFirstOrDefaultAsync_WhenFilterNull_ThrowsArgumentNullException()
     {
         await Assert.ThrowsAsync<ArgumentNullException>(
-            () => _sut.GetFirstOrDefaultAsync(null!, CancellationToken.None));
+            () => _sut.GetFirstOrDefaultAsync(null!, v => v, CancellationToken.None));
     }
 
     [Fact]
@@ -96,10 +96,14 @@ public class ViewRepoTests : IAsyncDisposable
     }
 
     [Fact]
-    public async Task FindAsync_WhenFilterNull_ThrowsArgumentNullException()
+    public async Task FindAsync_WhenFilterNull_ReturnsAllViews()
     {
-        await Assert.ThrowsAsync<ArgumentNullException>(
-            () => _sut.FindAsync(null!, CancellationToken.None));
+        await SeedAsync();
+        await SeedAsync();
+
+        var result = await _sut.FindAsync(null, CancellationToken.None);
+
+        Assert.Equal(2, result.Count());
     }
 
     [Fact]
