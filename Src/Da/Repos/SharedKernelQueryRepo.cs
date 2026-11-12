@@ -1,5 +1,6 @@
-﻿using Microsoft.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using SharedKernel.Da.Contracts;
 using SharedKernel.Da.Contracts.Models;
 using SharedKernel.Da.Exceptions;
@@ -7,7 +8,9 @@ using System.Linq.Expressions;
 
 namespace SharedKernel.Da.Repos;
 
-public class SharedKernelQueryRepo<T, TDbContext>(TDbContext context) :
+public class SharedKernelQueryRepo<T, TDbContext>(
+    TDbContext context,
+    ILogger<SharedKernelQueryRepo<T, TDbContext>> logger) :
     ISharedKernelQueryRepo<T>
     where T : class
     where TDbContext : DbContext
@@ -18,6 +21,15 @@ public class SharedKernelQueryRepo<T, TDbContext>(TDbContext context) :
         Expression<Func<T, bool>>? filter,
         CancellationToken cancellationToken)
     {
+        const string methodName = nameof(CountAsync);
+        string entityType = typeof(T).Name;
+
+        logger.LogDebug(
+            "{Method}: Counting {EntityType} records. Filter applied: {HasFilter}",
+            methodName,
+            entityType,
+            filter is not null);
+
         try
         {
             IQueryable<T> query = dbSet.AsQueryable();
@@ -25,11 +37,25 @@ public class SharedKernelQueryRepo<T, TDbContext>(TDbContext context) :
             if (filter != null)
                 query = query.Where(filter);
 
-            return await query.CountAsync(cancellationToken);
+            int count = await query.CountAsync(cancellationToken);
+
+            logger.LogDebug(
+                "{Method}: Counted {Count} {EntityType} records",
+                methodName,
+                count,
+                entityType);
+
+            return count;
         }
         catch (Exception ex) when (ex is not DataAccessException)
         {
-            throw new DataAccessException(ex, $"Failed to count items of type {typeof(T).Name}");
+            logger.LogError(
+                ex,
+                "{Method}: Failed to count {EntityType} records",
+                methodName,
+                entityType);
+
+            throw new DataAccessException(ex, $"Failed to count items of type {entityType}");
         }
     }
 
@@ -46,7 +72,21 @@ public class SharedKernelQueryRepo<T, TDbContext>(TDbContext context) :
         CancellationToken cancellationToken,
         params Expression<Func<T, object>>[] includes)
     {
+        const string methodName = nameof(FindAsync);
+        string entityType = typeof(T).Name;
+        string resultType = typeof(TResult).Name;
+
         EnsureSelectorOrSameType(selector);
+
+        logger.LogDebug(
+            "{Method}: Querying {EntityType} records as {ResultType}. Filter applied: {HasFilter}, Ordered: {IsOrdered}, Descending: {IsDescending}, Includes: {IncludeCount}",
+            methodName,
+            entityType,
+            resultType,
+            filter is not null,
+            orderBy is not null,
+            isDescending,
+            includes.Length);
 
         try
         {
@@ -55,23 +95,61 @@ public class SharedKernelQueryRepo<T, TDbContext>(TDbContext context) :
             if (orderBy != null)
                 query = isDescending ? query.OrderByDescending(orderBy) : query.OrderBy(orderBy);
 
-            return await Project(query, selector).ToListAsync(cancellationToken);
+            List<TResult> results = await Project(query, selector).ToListAsync(cancellationToken);
+
+            logger.LogDebug(
+                "{Method}: Retrieved {Count} {ResultType} records from {EntityType}",
+                methodName,
+                results.Count,
+                resultType,
+                entityType);
+
+            return results;
         }
         catch (Exception ex) when (ex is not DataAccessException)
         {
-            throw new DataAccessException(ex, $"Failed to get projected list for type {typeof(T).Name}");
+            logger.LogError(
+                ex,
+                "{Method}: Failed to get projected list of {ResultType} from {EntityType}",
+                methodName,
+                resultType,
+                entityType);
+
+            throw new DataAccessException(ex, $"Failed to get projected list for type {entityType}");
         }
     }
 
     public virtual async Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken)
     {
+        const string methodName = nameof(GetAllAsync);
+        string entityType = typeof(T).Name;
+
+        logger.LogDebug(
+            "{Method}: Retrieving all {EntityType} records",
+            methodName,
+            entityType);
+
         try
         {
-            return await dbSet.AsNoTracking().ToListAsync(cancellationToken);
+            List<T> items = await dbSet.AsNoTracking().ToListAsync(cancellationToken);
+
+            logger.LogDebug(
+                "{Method}: Retrieved {Count} {EntityType} records",
+                methodName,
+                items.Count,
+                entityType);
+
+            return items;
         }
         catch (Exception ex) when (ex is not DataAccessException)
         {
-            throw new DataAccessException(ex, $"Failed to retrieve all items of type {typeof(T).Name}");
+            logger.LogError(
+                ex,
+                "{Method}: Failed to retrieve all {EntityType} records",
+                methodName,
+                entityType);
+
+            throw new DataAccessException(ex, $"Failed to retrieve all items of type {entityType}");
         }
     }
 
@@ -90,15 +168,46 @@ public class SharedKernelQueryRepo<T, TDbContext>(TDbContext context) :
         CancellationToken cancellationToken,
         params Expression<Func<T, object>>[] includes)
     {
+        const string methodName = nameof(GetPagedListAsync);
+        string entityType = typeof(T).Name;
+        string resultType = typeof(TResult).Name;
+
         if (pageNumber < 1)
+        {
+            logger.LogWarning(
+                "{Method}: Invalid page number {PageNumber} for {EntityType}",
+                methodName,
+                pageNumber,
+                entityType);
+
             throw new ArgumentOutOfRangeException(nameof(pageNumber), "Page number must be greater than 0");
+        }
 
         if (pageSize < 1)
+        {
+            logger.LogWarning(
+                "{Method}: Invalid page size {PageSize} for {EntityType}",
+                methodName,
+                pageSize,
+                entityType);
+
             throw new ArgumentOutOfRangeException(nameof(pageSize), "Page size must be greater than 0");
+        }
 
         orderBy ??= BuildDefaultOrderBy();
 
         EnsureSelectorOrSameType(selector);
+
+        logger.LogDebug(
+            "{Method}: Retrieving page {PageNumber} with size {PageSize} of {EntityType} records as {ResultType}. Filter applied: {HasFilter}, Descending: {IsDescending}, Includes: {IncludeCount}",
+            methodName,
+            pageNumber,
+            pageSize,
+            entityType,
+            resultType,
+            filter is not null,
+            isDescending,
+            includes.Length);
 
         try
         {
@@ -112,6 +221,15 @@ public class SharedKernelQueryRepo<T, TDbContext>(TDbContext context) :
 
             List<TResult> items = await Project(query, selector).ToListAsync(cancellationToken);
 
+            logger.LogDebug(
+                "{Method}: Retrieved {ItemCount} of {TotalCount} {ResultType} records from {EntityType} for page {PageNumber}",
+                methodName,
+                items.Count,
+                totalCount,
+                resultType,
+                entityType,
+                pageNumber);
+
             return new PagedResult<TResult>
             {
                 Items = items,
@@ -123,15 +241,36 @@ public class SharedKernelQueryRepo<T, TDbContext>(TDbContext context) :
         }
         catch (OperationCanceledException)
         {
+            logger.LogDebug(
+                "{Method}: Retrieving page {PageNumber} of {EntityType} records was cancelled",
+                methodName,
+                pageNumber,
+                entityType);
+
             throw;
         }
         catch (SqlException ex) when (ex.Message.Contains("Operation cancelled by user"))
         {
+            logger.LogDebug(
+                ex,
+                "{Method}: Retrieving page {PageNumber} of {EntityType} records was cancelled by the database",
+                methodName,
+                pageNumber,
+                entityType);
+
             throw;
         }
         catch (Exception ex) when (ex is not DataAccessException)
         {
-            throw new DataAccessException(ex, $"Failed to get paged list for type {typeof(T).Name}");
+            logger.LogError(
+                ex,
+                "{Method}: Failed to get page {PageNumber} of {ResultType} records from {EntityType}",
+                methodName,
+                pageNumber,
+                resultType,
+                entityType);
+
+            throw new DataAccessException(ex, $"Failed to get paged list for type {entityType}");
         }
     }
 
@@ -139,16 +278,45 @@ public class SharedKernelQueryRepo<T, TDbContext>(TDbContext context) :
         Expression<Func<T, bool>>? filter,
         CancellationToken cancellationToken)
     {
+        const string methodName = nameof(IsExistsAsync);
+        string entityType = typeof(T).Name;
+
         if (filter == null)
+        {
+            logger.LogWarning(
+                "{Method}: Filter cannot be null for {EntityType}",
+                methodName,
+                entityType);
+
             throw new ArgumentNullException(nameof(filter));
+        }
+
+        logger.LogDebug(
+            "{Method}: Checking existence of {EntityType} records",
+            methodName,
+            entityType);
 
         try
         {
-            return await dbSet.AnyAsync(filter, cancellationToken);
+            bool exists = await dbSet.AnyAsync(filter, cancellationToken);
+
+            logger.LogDebug(
+                "{Method}: Existence check for {EntityType} returned {Exists}",
+                methodName,
+                entityType,
+                exists);
+
+            return exists;
         }
         catch (Exception ex) when (ex is not DataAccessException)
         {
-            throw new DataAccessException(ex, $"Failed in existence check for type {typeof(T).Name}");
+            logger.LogError(
+                ex,
+                "{Method}: Failed in existence check for {EntityType}",
+                methodName,
+                entityType);
+
+            throw new DataAccessException(ex, $"Failed in existence check for type {entityType}");
         }
     }
 
@@ -158,19 +326,62 @@ public class SharedKernelQueryRepo<T, TDbContext>(TDbContext context) :
         CancellationToken cancellationToken,
         params Expression<Func<T, object>>[] includes)
     {
-        if (filter == null) throw new ArgumentNullException(nameof(filter));
+        const string methodName = nameof(GetFirstOrDefaultAsync);
+        string entityType = typeof(T).Name;
+        string resultType = typeof(TResult).Name;
 
-        if (selector == null) throw new ArgumentNullException(nameof(selector));
+        if (filter == null)
+        {
+            logger.LogWarning(
+                "{Method}: Filter cannot be null for {EntityType}",
+                methodName,
+                entityType);
+
+            throw new ArgumentNullException(nameof(filter));
+        }
+
+        if (selector == null)
+        {
+            logger.LogWarning(
+                "{Method}: Selector cannot be null for {EntityType}",
+                methodName,
+                entityType);
+
+            throw new ArgumentNullException(nameof(selector));
+        }
+
+        logger.LogDebug(
+            "{Method}: Retrieving first {ResultType} record from {EntityType}. Includes: {IncludeCount}",
+            methodName,
+            resultType,
+            entityType,
+            includes.Length);
 
         try
         {
-            return await BuildQuery(filter, includes)
+            TResult? result = await BuildQuery(filter, includes)
                 .Select(selector)
                 .FirstOrDefaultAsync(cancellationToken);
+
+            logger.LogDebug(
+                "{Method}: First {ResultType} record from {EntityType} was {ResultState}",
+                methodName,
+                resultType,
+                entityType,
+                result is null ? "not found" : "found");
+
+            return result;
         }
         catch (Exception ex) when (ex is not DataAccessException)
         {
-            throw new DataAccessException(ex, $"Failed to get projected item of type {typeof(T).Name}");
+            logger.LogError(
+                ex,
+                "{Method}: Failed to get first {ResultType} record from {EntityType}",
+                methodName,
+                resultType,
+                entityType);
+
+            throw new DataAccessException(ex, $"Failed to get projected item of type {entityType}");
         }
     }
 
