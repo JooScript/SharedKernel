@@ -1,12 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
-using SharedKernel.Da.Contracts.Models;
+﻿using SharedKernel.Da.Contracts.Models;
 using System.Linq.Expressions;
 
 namespace SharedKernel.Da.Contracts;
 
-public interface ISharedKernelQueryRepo<T, TDbContext>
+public interface ISharedKernelQueryRepo<T>
     where T : class
-    where TDbContext : DbContext
 {
     Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>>? filter, CancellationToken cancellationToken);
 
