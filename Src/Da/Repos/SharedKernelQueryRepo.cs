@@ -1,5 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using SharedKernel.Da.Contracts;
 using SharedKernel.Da.Contracts.Models;
 using SharedKernel.Da.Exceptions;
@@ -36,8 +36,7 @@ public class SharedKernelQueryRepo<T, TDbContext>(TDbContext context) :
     public virtual async Task<IEnumerable<T>> FindAsync(
         Expression<Func<T, bool>>? filter,
         CancellationToken cancellationToken)
-    {
-    }
+        => await FindAsync<T>(filter, null, null, false, cancellationToken);
 
     public virtual async Task<IEnumerable<TResult>> FindAsync<TResult>(
         Expression<Func<T, bool>>? filter,
@@ -47,6 +46,21 @@ public class SharedKernelQueryRepo<T, TDbContext>(TDbContext context) :
         CancellationToken cancellationToken,
         params Expression<Func<T, object>>[] includes)
     {
+        EnsureSelectorOrSameType(selector);
+
+        try
+        {
+            IQueryable<T> query = BuildQuery(filter, includes);
+
+            if (orderBy != null)
+                query = isDescending ? query.OrderByDescending(orderBy) : query.OrderBy(orderBy);
+
+            return await Project(query, selector).ToListAsync(cancellationToken);
+        }
+        catch (Exception ex) when (ex is not DataAccessException)
+        {
+            throw new DataAccessException(ex, $"Failed to get projected list for type {typeof(T).Name}");
+        }
     }
 
     public virtual async Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken)
@@ -86,6 +100,49 @@ public class SharedKernelQueryRepo<T, TDbContext>(TDbContext context) :
         CancellationToken cancellationToken,
         params Expression<Func<T, object>>[] includes)
     {
+        if (pageNumber < 1)
+            throw new ArgumentOutOfRangeException(nameof(pageNumber), "Page number must be greater than 0");
+
+        if (pageSize < 1)
+            throw new ArgumentOutOfRangeException(nameof(pageSize), "Page size must be greater than 0");
+
+        if (orderBy == null)
+            throw new ArgumentNullException(nameof(orderBy), "Order by is required for pagination");
+
+        EnsureSelectorOrSameType<TResult>(selector);
+
+        try
+        {
+            IQueryable<T> query = BuildQuery(filter, includes);
+
+            int totalCount = await query.CountAsync(cancellationToken);
+
+            query = isDescending ? query.OrderByDescending(orderBy) : query.OrderBy(orderBy);
+            query = query.Skip((pageNumber - 1) * pageSize).Take(pageSize);
+
+            List<TResult> items = await Project(query, selector).ToListAsync(cancellationToken);
+
+            return new PagedResult<TResult>
+            {
+                Items = items,
+                CurrentPage = pageNumber,
+                PageSize = pageSize,
+                TotalCount = totalCount,
+                TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
+            };
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (SqlException ex) when (ex.Message.Contains("Operation cancelled by user"))
+        {
+            throw;
+        }
+        catch (Exception ex) when (ex is not DataAccessException)
+        {
+            throw new DataAccessException(ex, $"Failed to get paged list for type {typeof(T).Name}");
+        }
     }
 
     public virtual async Task<bool> IsExistsAsync(
@@ -111,6 +168,56 @@ public class SharedKernelQueryRepo<T, TDbContext>(TDbContext context) :
         CancellationToken cancellationToken,
         params Expression<Func<T, object>>[] includes)
     {
+        if (filter == null) throw new ArgumentNullException(nameof(filter));
+
+        if (selector == null) throw new ArgumentNullException(nameof(selector));
+
+        try
+        {
+            return await BuildQuery(filter, includes)
+                .Select(selector)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+        catch (Exception ex) when (ex is not DataAccessException)
+        {
+            throw new DataAccessException(ex, $"Failed to get projected item of type {typeof(T).Name}");
+        }
     }
+
+    #region Helpers
+
+    private IQueryable<T> BuildQuery(
+        Expression<Func<T, bool>>? filter,
+        Expression<Func<T, object>>[] includes)
+    {
+        IQueryable<T> query = dbSet.AsNoTracking();
+
+        foreach (var include in includes)
+            query = query.Include(include);
+
+        if (filter != null)
+            query = query.Where(filter);
+
+        return query;
+    }
+
+    // With no selector, TResult must be T itself. Query.Cast<TResult>() on an
+    // unrelated type would fail at translation time, so we fail early instead.
+    private static void EnsureSelectorOrSameType<TResult>(Expression<Func<T, TResult>>? selector)
+    {
+        if (selector == null && typeof(TResult) != typeof(T))
+            throw new ArgumentException(
+                $"A selector is required when {typeof(TResult).Name} differs from {typeof(T).Name}.",
+                nameof(selector));
+    }
+
+    private static IQueryable<TResult> Project<TResult>(
+        IQueryable<T> query,
+        Expression<Func<T, TResult>>? selector)
+        => selector != null
+            ? query.Select(selector)
+            : (IQueryable<TResult>)(object)query;
+
+    #endregion
 
 }
