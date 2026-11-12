@@ -22,7 +22,8 @@ public interface ISharedKernelQueryRepo<T>
         Expression<Func<T, bool>>? filter,
         Expression<Func<T, TResult>>? selector,
         Expression<Func<T, object>>? orderBy,
-        bool isDescending, CancellationToken cancellationToken,
+        bool isDescending,
+        CancellationToken cancellationToken,
         params Expression<Func<T, object>>[] includes);
 
     Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken);
@@ -30,8 +31,8 @@ public interface ISharedKernelQueryRepo<T>
     Task<T?> GetFirstOrDefaultAsync(Expression<Func<T, bool>>? filter, CancellationToken cancellationToken);
 
     Task<TResult?> GetFirstOrDefaultAsync<TResult>(
-        Expression<Func<T, bool>> filter,
-        Expression<Func<T, TResult>> selector,
+        Expression<Func<T, bool>>? filter,
+        Expression<Func<T, TResult>>? selector,
         CancellationToken cancellationToken,
         params Expression<Func<T, object>>[] includes);
 
