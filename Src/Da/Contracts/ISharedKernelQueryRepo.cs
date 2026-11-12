@@ -29,6 +29,12 @@ public interface ISharedKernelQueryRepo<T>
 
     Task<T?> GetFirstOrDefaultAsync(Expression<Func<T, bool>>? filter, CancellationToken cancellationToken);
 
+    Task<TResult?> GetFirstOrDefaultAsync<TResult>(
+        Expression<Func<T, bool>> filter,
+        Expression<Func<T, TResult>> selector,
+        CancellationToken cancellationToken,
+        params Expression<Func<T, object>>[] includes);
+
     Task<bool> IsExistsAsync(Expression<Func<T, bool>>? filter, CancellationToken cancellationToken);
 
     Task<int> CountAsync(Expression<Func<T, bool>>? filter, CancellationToken cancellationToken);
