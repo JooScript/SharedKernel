@@ -201,13 +201,13 @@ public partial class TableQryRepoTests
     }
 
     [Fact]
-    public async Task GetListAsync_WithFilterAndSelector_ReturnsProjection()
+    public async Task FindAsync_WithFilterAndSelector_ReturnsProjection()
     {
         await SeedAsync(name: "A", value: 1);
         await SeedAsync(name: "B", value: 2);
         await SeedAsync(name: "C", value: 3);
 
-        var result = (await _sut.GetListAsync(
+        var result = (await _sut.FindAsync(
             filter: e => e.Value >= 2,
             selector: e => e.Name,
             orderBy: e => e.Value,
@@ -218,12 +218,12 @@ public partial class TableQryRepoTests
     }
 
     [Fact]
-    public async Task GetListAsync_WithoutSelector_ReturnsEntities()
+    public async Task FindAsync_WithoutSelector_ReturnsEntities()
     {
         await SeedAsync();
         await SeedAsync();
 
-        var result = (await _sut.GetListAsync<TestEntity>(
+        var result = (await _sut.FindAsync<TestEntity>(
             filter: null,
             selector: null,
             orderBy: null,

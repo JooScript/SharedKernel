@@ -98,7 +98,8 @@ public partial class AuthControllerTests
                     Success = true,
                     Requires2FA = true
                 },
-                NewRefreshTokenDto = CreateRefreshTokenDto()
+                NewRefreshTokenDto = CreateRefreshTokenDto(),
+                Claims = CreateClaims()
             });
 
         var result = await _sut.LogIn(dto, CancellationToken.None);

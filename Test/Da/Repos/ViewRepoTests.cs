@@ -34,24 +34,24 @@ public class ViewRepoTests : IAsyncDisposable
 
         var result = await _sut.GetAllAsync(CancellationToken.None);
 
-        Assert.Equal(2, result.Count);
+        Assert.Equal(2, result.Count());
     }
 
     [Fact]
-    public async Task GetByIdAsync_WhenExists_ReturnsView()
+    public async Task GetFirstOrDefaultAsync_WhenExists_ReturnsView()
     {
         var view = await SeedAsync(name: "Target");
 
-        var result = await _sut.GetByIdAsync(view.Id, CancellationToken.None);
+        var result = await _sut.GetFirstOrDefaultAsync(v => v.Id == view.Id, CancellationToken.None);
 
         Assert.NotNull(result);
         Assert.Equal("Target", result!.Name);
     }
 
     [Fact]
-    public async Task GetByIdAsync_WhenMissing_ReturnsNull()
+    public async Task GetFirstOrDefaultAsync_WhenIdMissing_ReturnsNull()
     {
-        var result = await _sut.GetByIdAsync(Guid.NewGuid(), CancellationToken.None);
+        var result = await _sut.GetFirstOrDefaultAsync(v => v.Id == Guid.NewGuid(), CancellationToken.None);
 
         Assert.Null(result);
     }
@@ -84,26 +84,26 @@ public class ViewRepoTests : IAsyncDisposable
     }
 
     [Fact]
-    public async Task GetListAsync_ReturnsFilteredViews()
+    public async Task FindAsync_ReturnsFilteredViews()
     {
         await SeedAsync(value: 1);
         await SeedAsync(value: 2);
         await SeedAsync(value: 3);
 
-        var result = await _sut.GetListAsync(v => v.Value >= 2, CancellationToken.None);
+        var result = await _sut.FindAsync(v => v.Value >= 2, CancellationToken.None);
 
-        Assert.Equal(2, result.Count);
+        Assert.Equal(2, result.Count());
     }
 
     [Fact]
-    public async Task GetListAsync_WhenFilterNull_ThrowsArgumentNullException()
+    public async Task FindAsync_WhenFilterNull_ThrowsArgumentNullException()
     {
         await Assert.ThrowsAsync<ArgumentNullException>(
-            () => _sut.GetListAsync(null!, CancellationToken.None));
+            () => _sut.FindAsync(null!, CancellationToken.None));
     }
 
     [Fact]
-    public async Task FindAsync_ReturnsFilteredViews()
+    public async Task FindAsync_WithNameFilter_ReturnsFilteredViews()
     {
         var target = await SeedAsync(name: "FindMe");
         await SeedAsync(name: "Other");
