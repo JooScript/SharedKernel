@@ -156,7 +156,7 @@ public class SharedKernelQueryRepo<T, TDbContext>(
     public virtual async Task<T?> GetFirstOrDefaultAsync(
         Expression<Func<T, bool>>? filter,
         CancellationToken cancellationToken)
-        => await GetFirstOrDefaultAsync<T>(filter, null, cancellationToken);
+        => await GetFirstOrDefaultAsync<T>(filter, x => x, cancellationToken);
 
     public virtual async Task<PagedResult<TResult>> GetPagedListAsync<TResult>(
         int pageNumber,
