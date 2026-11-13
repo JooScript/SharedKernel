@@ -11,7 +11,7 @@ public interface ISharedKernelTableQryRepo<T, TDbContext> : ISharedKernelQueryRe
 
     Task<TResult?> GetByIdAsync<TResult>(
         Guid id,
-        Expression<Func<T, TResult>>? selector,
+        Expression<Func<T, TResult>> selector,
         CancellationToken cancellationToken,
         params Expression<Func<T, object>>[] includes);
 
