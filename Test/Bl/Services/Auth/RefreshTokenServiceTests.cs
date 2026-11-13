@@ -178,7 +178,7 @@ public class RefreshTokenServiceTests
             .Setup(r => r.FindAsync(
                 It.IsAny<Expression<Func<TbRefreshToken, bool>>>(),
                 It.IsAny<Expression<Func<TbRefreshToken, Guid>>>(),
-                null,
+                o => o.CreatedAt,
                 true,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { Guid.NewGuid() });
@@ -214,7 +214,7 @@ public class RefreshTokenServiceTests
             .Setup(r => r.FindAsync(
                 It.IsAny<Expression<Func<TbRefreshToken, bool>>>(),
                 It.IsAny<Expression<Func<TbRefreshToken, Guid>>>(),
-                null,
+                o => o.CreatedAt,
                 true,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { Guid.NewGuid() });
@@ -246,7 +246,7 @@ public class RefreshTokenServiceTests
             .Setup(r => r.FindAsync(
                 It.IsAny<Expression<Func<TbRefreshToken, bool>>>(),
                 It.IsAny<Expression<Func<TbRefreshToken, Guid>>>(),
-                null,
+                o => o.CreatedAt,
                 true,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Guid>());
