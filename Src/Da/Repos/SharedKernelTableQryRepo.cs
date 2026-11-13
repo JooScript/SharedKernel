@@ -48,7 +48,7 @@ public class SharedKernelTableQryRepo<Tb, TDbContext>(
 
             return await query
                 .Where(x => x.Id == id)
-                .Select(selector)
+                .Select(selector ?? (e => (TResult)(object)e))
                 .FirstOrDefaultAsync(cancellationToken);
         }
         catch (Exception ex)
