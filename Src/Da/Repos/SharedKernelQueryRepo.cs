@@ -322,7 +322,7 @@ public class SharedKernelQueryRepo<T, TDbContext>(
 
     public virtual async Task<TResult?> GetFirstOrDefaultAsync<TResult>(
         Expression<Func<T, bool>>? filter,
-        Expression<Func<T, TResult>>? selector,
+        Expression<Func<T, TResult>> selector,
         CancellationToken cancellationToken,
         params Expression<Func<T, object>>[] includes)
     {
