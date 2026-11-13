@@ -35,7 +35,7 @@ public class SharedKernelTableQryRepo<Tb, TDbContext>(
 
     public virtual async Task<TResult?> GetByIdAsync<TResult>(
     Guid id,
-    Expression<Func<Tb, TResult>>? selector,
+    Expression<Func<Tb, TResult>> selector,
     CancellationToken cancellationToken,
     params Expression<Func<Tb, object>>[] includes)
     {
@@ -48,7 +48,7 @@ public class SharedKernelTableQryRepo<Tb, TDbContext>(
 
             return await query
                 .Where(x => x.Id == id)
-                .Select(selector ?? (e => (TResult)(object)e))
+                .Select(selector)
                 .FirstOrDefaultAsync(cancellationToken);
         }
         catch (Exception ex)
