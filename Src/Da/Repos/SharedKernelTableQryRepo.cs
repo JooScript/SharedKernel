@@ -16,18 +16,11 @@ public class SharedKernelTableQryRepo<Tb, TDbContext>(
 {
     public virtual async Task<Tb?> GetTrackedOrLoadAsync(Guid id, CancellationToken cancellationToken)
     {
-        try
-        {
-            var entity = dbSet.Local.FirstOrDefault(e => e.Id == id);
+        var entities = await GetTrackedOrLoadAsync(a => a.Id == id, cancellationToken);
 
-            if (entity is not null) return entity;
+        if (entities == null) return null;
 
-            return await dbSet.Where(a => a.Id == id).FirstOrDefaultAsync(cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            throw new DataAccessException(ex, $"Failed to get entity by ID {id} of type {typeof(Tb).Name}");
-        }
+        return entities.FirstOrDefault();
     }
 
     public virtual async Task<Tb?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
