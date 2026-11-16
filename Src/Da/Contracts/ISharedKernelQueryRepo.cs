@@ -39,5 +39,5 @@ public interface ISharedKernelQueryRepo<T>
     Task<bool> IsExistsAsync(Expression<Func<T, bool>>? filter, CancellationToken cancellationToken);
 
     Task<int> CountAsync(Expression<Func<T, bool>>? filter, CancellationToken cancellationToken);
-
+    Task<IEnumerable<T>?> GetTrackedOrLoadAsync(Expression<Func<T, bool>> filter, CancellationToken cancellationToken);
 }
