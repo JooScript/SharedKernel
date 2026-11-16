@@ -17,9 +17,23 @@ public class SharedKernelQueryRepo<T, TDbContext>(
 {
     protected readonly DbSet<T> dbSet = (context ?? throw new ArgumentNullException(nameof(context))).Set<T>();
 
-    public virtual async Task<int> CountAsync(
-        Expression<Func<T, bool>>? filter,
-        CancellationToken cancellationToken)
+    public virtual async Task<IEnumerable<T>?> GetTrackedOrLoadAsync(Expression<Func<T, bool>> filter, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var entity = dbSet.Local.AsEnumerable().Where(filter.Compile());
+
+            if (entity.Any()) return entity;
+
+            return await dbSet.Where(filter).ToListAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            throw new DataAccessException(ex, $"Failed to get entity of type {typeof(T).Name}");
+        }
+    }
+
+    public virtual async Task<int> CountAsync(Expression<Func<T, bool>>? filter, CancellationToken cancellationToken)
     {
         const string methodName = nameof(CountAsync);
         string entityType = typeof(T).Name;
@@ -59,9 +73,7 @@ public class SharedKernelQueryRepo<T, TDbContext>(
         }
     }
 
-    public virtual async Task<IEnumerable<T>> FindAsync(
-        Expression<Func<T, bool>>? filter,
-        CancellationToken cancellationToken)
+    public virtual async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>>? filter, CancellationToken cancellationToken)
         => await FindAsync<T>(filter, null, null, false, cancellationToken);
 
     public virtual async Task<IEnumerable<TResult>> FindAsync<TResult>(
@@ -153,9 +165,7 @@ public class SharedKernelQueryRepo<T, TDbContext>(
         }
     }
 
-    public virtual async Task<T?> GetFirstOrDefaultAsync(
-        Expression<Func<T, bool>>? filter,
-        CancellationToken cancellationToken)
+    public virtual async Task<T?> GetFirstOrDefaultAsync(Expression<Func<T, bool>>? filter, CancellationToken cancellationToken)
         => await GetFirstOrDefaultAsync<T>(filter, x => x, cancellationToken);
 
     public virtual async Task<PagedResult<TResult>> GetPagedListAsync<TResult>(
@@ -274,9 +284,7 @@ public class SharedKernelQueryRepo<T, TDbContext>(
         }
     }
 
-    public virtual async Task<bool> IsExistsAsync(
-        Expression<Func<T, bool>>? filter,
-        CancellationToken cancellationToken)
+    public virtual async Task<bool> IsExistsAsync(Expression<Func<T, bool>>? filter, CancellationToken cancellationToken)
     {
         const string methodName = nameof(IsExistsAsync);
         string entityType = typeof(T).Name;
