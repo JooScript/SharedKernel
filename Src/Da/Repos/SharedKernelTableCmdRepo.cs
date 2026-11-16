@@ -251,7 +251,7 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
         }
         catch (Exception ex)
         {
-            throw new DataAccessException(ex, $"Failed to change status for entity {id} of type {typeof(Tb).Name}");
+            throw new DataAccessException(ex, $"Failed to change status for entity of type {typeof(Tb).Name}");
         }
     }
 
