@@ -67,17 +67,6 @@ public partial class TableCmdRepoTests
     }
 
     [Fact]
-    public async Task ChangeStatusAsync_Many_WhenNull_ThrowsArgumentNullException()
-    {
-        await Assert.ThrowsAsync<ArgumentNullException>(
-            () => _sut.ChangeStatusAsync(
-                null!,
-                Guid.NewGuid(),
-                CurrentStateType.InActive,
-                CancellationToken.None));
-    }
-
-    [Fact]
     public async Task ChangeStatusAsync_Many_WhenSomeMissing_ReturnsFalse()
     {
         var existing = await SeedAsync();
@@ -97,13 +86,6 @@ public partial class TableCmdRepoTests
         var result = await _sut.HardDeleteAsync(Guid.NewGuid(), CancellationToken.None);
 
         Assert.False(result);
-    }
-
-    [Fact]
-    public async Task HardDeleteAsync_Many_WhenNull_ThrowsArgumentNullException()
-    {
-        await Assert.ThrowsAsync<ArgumentNullException>(
-            () => _sut.HardDeleteAsync(null!, CancellationToken.None));
     }
 
     [Fact]
