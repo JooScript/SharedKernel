@@ -56,9 +56,11 @@ public class RefreshTokenService<TDbContext>
             var ids = await qryRepo.FindAsync(
                 a => a.SessionId == tokenDto.SessionId && a.CurrentState == CurrentStateType.Active,
                 a => a.Id,
-                null,
+                a => a.CreatedAt,
                 true,
             cancellationToken);
+
+            if (!ids.Any() || ids.All(id => id == Guid.Empty) || ids.Count() == 0) return true;
 
             return await cmdRepo.DeactivateAsync(ids, tokenDto.UserId, cancellationToken);
         }
