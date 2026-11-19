@@ -192,8 +192,7 @@ public class SharedKernelTableCmdRepo<Tb, TDbContext>(
             throw new ArgumentNullException(nameof(ids));
         }
 
-        if (!ids.Any()) return false;
-
+        if (!ids.Any() || ids.All(id => id == Guid.Empty) || ids.Count() == 0) return false;
 
         try
         {
