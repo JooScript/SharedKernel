@@ -28,6 +28,8 @@ public static class ServiceCollectionExtensions
 
         #region DI
 
+        services.AddScoped(typeof(ISharedKernelQueryRepo<,>), typeof(SharedKernelQueryRepo<,>));
+        services.AddScoped(typeof(ISharedKernelViewRepo<,>), typeof(SharedKernelViewRepo<,>));
         services.AddScoped(typeof(ISharedKernelTableQryRepo<,>), typeof(SharedKernelTableQryRepo<,>));
         services.AddScoped(typeof(ISharedKernelTableCmdRepo<,>), typeof(SharedKernelTableCmdRepo<,>));
         services.AddScoped(typeof(ISharedKernelUnitOfWork<>), typeof(SharedKernelUnitOfWork<>));
