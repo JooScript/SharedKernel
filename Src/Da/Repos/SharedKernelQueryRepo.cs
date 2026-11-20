@@ -11,7 +11,7 @@ namespace SharedKernel.Da.Repos;
 public class SharedKernelQueryRepo<T, TDbContext>(
     TDbContext context,
     ILogger<SharedKernelQueryRepo<T, TDbContext>> logger) :
-    ISharedKernelQueryRepo<T>
+    ISharedKernelQueryRepo<T, TDbContext>
     where T : class
     where TDbContext : DbContext
 {
